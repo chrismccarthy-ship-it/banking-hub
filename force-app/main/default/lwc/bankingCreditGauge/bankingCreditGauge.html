@@ -1,0 +1,36 @@
+<template>
+    <div class="gauge-wrap">
+        <svg viewBox="0 0 200 120" class="gauge-svg" aria-label={gaugeAriaLabel} role="img">
+            <!-- Background arc -->
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e8e6f0" stroke-width="16" stroke-linecap="round"/>
+            <!-- Colored score arc -->
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none"
+                stroke={arcColor}
+                stroke-width="16"
+                stroke-linecap="round"
+                stroke-dasharray={arcDashArray}
+                stroke-dashoffset={arcDashOffset}
+                class="gauge-arc"
+            />
+            <!-- Needle -->
+            <line
+                x1="100" y1="100"
+                x2={needleX2} y2={needleY2}
+                stroke="#333"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                class="gauge-needle"
+            />
+            <circle cx="100" cy="100" r="5" fill="#333"/>
+            <!-- Score number -->
+            <text x="100" y="78" text-anchor="middle" class="gauge-score" fill={arcColor}>{creditScore}</text>
+            <!-- Label -->
+            <text x="100" y="92" text-anchor="middle" class="gauge-label" fill="#999">{scoreLabel}</text>
+            <!-- Min / Max labels -->
+            <text x="18" y="115" text-anchor="middle" class="gauge-minmax" fill="#bbb">300</text>
+            <text x="182" y="115" text-anchor="middle" class="gauge-minmax" fill="#bbb">850</text>
+        </svg>
+        <!-- Score tier badge -->
+        <div class="gauge-tier" style={tierBadgeStyle}>{tierLabel}</div>
+    </div>
+</template>

@@ -1,0 +1,231 @@
+<template>
+    <div class="loan-wrap">
+        <!-- Loan type header -->
+        <div class="loan-header" style={headerStyle}>
+            <span class="loan-type-icon">{loanIcon}</span>
+            <div>
+                <h2 class="loan-header-title">{loanTitle}</h2>
+                <p class="loan-header-sub">Starting rate: {startingRate} APR · Est. time: 5 min</p>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-track"><div class="progress-fill" style={progressStyle}></div></div>
+        <p class="step-counter" style={primaryTextStyle}>Step {currentStep} of {totalSteps}</p>
+
+        <!-- ── AUTO LOAN STEPS ── -->
+        <template if:true={isAutoLoan}>
+            <template if:true={isStep1}>
+                <div class="step-panel">
+                    <h3 class="step-title">Vehicle Information</h3>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>Vehicle Year</label>
+                            <select data-field="vehicleYear" onchange={handleInput}>
+                                <option>2025</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Make</label>
+                            <input type="text" placeholder="Toyota" data-field="vehicleMake" onchange={handleInput}/>
+                        </div>
+                        <div class="form-field">
+                            <label>Model</label>
+                            <input type="text" placeholder="Camry" data-field="vehicleModel" onchange={handleInput}/>
+                        </div>
+                        <div class="form-field">
+                            <label>Condition</label>
+                            <select data-field="vehicleCondition" onchange={handleInput}>
+                                <option value="new">New</option>
+                                <option value="used">Used</option>
+                                <option value="certified">Certified Pre-Owned</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Purchase Price</label>
+                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
+                            <input type="number" placeholder="35000" data-field="vehiclePrice" onchange={handleInput}/></div>
+                        </div>
+                        <div class="form-field">
+                            <label>Down Payment</label>
+                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
+                            <input type="number" placeholder="5000" data-field="downPayment" onchange={handleInput}/></div>
+                        </div>
+                    </div>
+                    <div class="loan-calc-box" style={calcBoxStyle}>
+                        <span>Estimated Loan Amount:</span>
+                        <strong style={primaryTextStyle}>{estimatedLoanAmount}</strong>
+                    </div>
+                    <div class="step-actions">
+                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                    </div>
+                </div>
+            </template>
+        </template>
+
+        <!-- ── HOME LOAN STEPS ── -->
+        <template if:true={isHomeLoan}>
+            <template if:true={isStep1}>
+                <div class="step-panel">
+                    <h3 class="step-title">Property Details</h3>
+                    <div class="form-grid">
+                        <div class="form-field form-field--full">
+                            <label>Property Address</label>
+                            <input type="text" placeholder="123 Oak Street, Charlotte, NC 28202" data-field="propertyAddress" onchange={handleInput}/>
+                        </div>
+                        <div class="form-field">
+                            <label>Property Type</label>
+                            <select data-field="propertyType" onchange={handleInput}>
+                                <option value="single_family">Single Family</option>
+                                <option value="condo">Condominium</option>
+                                <option value="multi_family">Multi-Family</option>
+                                <option value="townhouse">Townhouse</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Purchase Purpose</label>
+                            <select data-field="purchasePurpose" onchange={handleInput}>
+                                <option value="purchase">Purchase</option>
+                                <option value="refinance">Refinance</option>
+                                <option value="cash_out">Cash-Out Refinance</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Purchase Price / Value</label>
+                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
+                            <input type="number" placeholder="450000" data-field="propertyValue" onchange={handleInput}/></div>
+                        </div>
+                        <div class="form-field">
+                            <label>Down Payment</label>
+                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
+                            <input type="number" placeholder="90000" data-field="downPayment" onchange={handleInput}/></div>
+                        </div>
+                        <div class="form-field">
+                            <label>Loan Term</label>
+                            <select data-field="loanTerm" onchange={handleInput}>
+                                <option value="30">30-year fixed</option>
+                                <option value="15">15-year fixed</option>
+                                <option value="10_1_arm">10/1 ARM</option>
+                                <option value="7_1_arm">7/1 ARM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="loan-calc-box" style={calcBoxStyle}>
+                        <span>Estimated Monthly Payment:</span>
+                        <strong style={primaryTextStyle}>{estimatedMonthlyPayment}</strong>
+                    </div>
+                    <div class="step-actions">
+                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                    </div>
+                </div>
+            </template>
+        </template>
+
+        <!-- ── PERSONAL LOAN STEPS ── -->
+        <template if:true={isPersonalLoan}>
+            <template if:true={isStep1}>
+                <div class="step-panel">
+                    <h3 class="step-title">Loan Details</h3>
+                    <div class="form-grid">
+                        <div class="form-field form-field--full">
+                            <label>Loan Purpose</label>
+                            <select data-field="loanPurpose" onchange={handleInput}>
+                                <option value="debt_consolidation">Debt Consolidation</option>
+                                <option value="home_improvement">Home Improvement</option>
+                                <option value="medical">Medical Expenses</option>
+                                <option value="wedding">Wedding</option>
+                                <option value="vacation">Vacation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Loan Amount</label>
+                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
+                            <input type="number" placeholder="15000" data-field="loanAmount" onchange={handleInput}/></div>
+                        </div>
+                        <div class="form-field">
+                            <label>Loan Term</label>
+                            <select data-field="loanTerm" onchange={handleInput}>
+                                <option value="24">24 months</option>
+                                <option value="36">36 months</option>
+                                <option value="48">48 months</option>
+                                <option value="60">60 months</option>
+                                <option value="84">84 months</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="loan-calc-box" style={calcBoxStyle}>
+                        <span>Estimated Monthly Payment:</span>
+                        <strong style={primaryTextStyle}>{personalMonthlyPayment}</strong>
+                    </div>
+                    <div class="step-actions">
+                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                    </div>
+                </div>
+            </template>
+        </template>
+
+        <!-- Step 2: Employment & Income (all loan types) -->
+        <template if:true={isStep2}>
+            <div class="step-panel">
+                <h3 class="step-title">Employment &amp; Income</h3>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Employment Status</label>
+                        <select data-field="employmentStatus" onchange={handleInput}>
+                            <option value="employed">Employed Full-Time</option>
+                            <option value="self_employed">Self-Employed</option>
+                            <option value="part_time">Employed Part-Time</option>
+                            <option value="retired">Retired</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Employer Name</label>
+                        <input type="text" placeholder="Acme Corp" data-field="employer" onchange={handleInput}/>
+                    </div>
+                    <div class="form-field">
+                        <label>Annual Gross Income</label>
+                        <div class="input-prefix-wrap"><span class="input-prefix">$</span>
+                        <input type="number" placeholder="85000" data-field="annualIncome" onchange={handleInput}/></div>
+                    </div>
+                    <div class="form-field">
+                        <label>Years at Current Job</label>
+                        <input type="number" placeholder="3" data-field="yearsEmployed" onchange={handleInput}/>
+                    </div>
+                    <div class="form-field form-field--full">
+                        <label>Other Monthly Income (optional)</label>
+                        <div class="input-prefix-wrap"><span class="input-prefix">$</span>
+                        <input type="number" placeholder="0" data-field="otherIncome" onchange={handleInput}/></div>
+                    </div>
+                </div>
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
+                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 3: Review & Submit -->
+        <template if:true={isStep3}>
+            <div class="step-panel">
+                <h3 class="step-title">Review &amp; Submit</h3>
+                <div class="review-card">
+                    <div class="review-row"><span class="review-label">Loan Type</span><span>{loanTitle}</span></div>
+                    <div class="review-row"><span class="review-label">Employment</span><span>{loanData.employmentStatus}</span></div>
+                    <div class="review-row"><span class="review-label">Annual Income</span><span>${loanData.annualIncome}</span></div>
+                    <div class="review-row"><span class="review-label">Starting Rate</span><span style={primaryTextStyle}><strong>{startingRate} APR</strong></span></div>
+                </div>
+                <template if:true={loanApproved}>
+                    <div class="success-banner" style={successStyle}>
+                        ✅ Pre-qualified! Loan reference: <strong>{loanRef}</strong>. A banker will contact you within 1 business day.
+                    </div>
+                </template>
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
+                    <button class="btn-primary" style={primaryBtnStyle} onclick={submitLoan}>Submit Application</button>
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

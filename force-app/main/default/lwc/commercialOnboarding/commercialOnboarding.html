@@ -1,0 +1,186 @@
+<template>
+    <div class="comm-wrap">
+        <div class="comm-header" style={headerStyle}>
+            <h2>🏢 Commercial Banking Onboarding</h2>
+            <p>KYB verification · Treasury setup · Payment channel configuration</p>
+        </div>
+
+        <div class="progress-track"><div class="progress-fill" style={progressStyle}></div></div>
+        <div class="step-tabs">
+            <template for:each={steps} for:item="step">
+                <button key={step.id} class={step.cssClass} onclick={goToStep} data-step={step.id} style={step.activeStyle}>
+                    <span class="step-tab-num" style={step.numStyle}>{step.num}</span>
+                    <span>{step.label}</span>
+                </button>
+            </template>
+        </div>
+
+        <!-- Step 1: Business Info -->
+        <template if:true={isStep1}>
+            <div class="step-panel">
+                <h3 class="step-title" style={primaryTextStyle}>Business Information</h3>
+                <div class="form-grid">
+                    <div class="form-field form-field--full">
+                        <label>Legal Business Name</label>
+                        <input type="text" placeholder="Acme Corporation LLC" data-field="legalName" onchange={handleInput}/>
+                    </div>
+                    <div class="form-field">
+                        <label>DBA (if different)</label>
+                        <input type="text" placeholder="Acme Corp" data-field="dba" onchange={handleInput}/>
+                    </div>
+                    <div class="form-field">
+                        <label>Business Type</label>
+                        <select data-field="businessType" onchange={handleInput}>
+                            <option value="llc">LLC</option>
+                            <option value="corporation">Corporation (C/S-Corp)</option>
+                            <option value="partnership">Partnership</option>
+                            <option value="sole_prop">Sole Proprietorship</option>
+                            <option value="nonprofit">Non-Profit</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Industry / NAICS Code</label>
+                        <input type="text" placeholder="Financial Services - 5221" data-field="industry" onchange={handleInput}/>
+                    </div>
+                    <div class="form-field">
+                        <label>EIN / Tax ID</label>
+                        <input type="text" placeholder="XX-XXXXXXX" data-field="ein" onchange={handleInput}/>
+                    </div>
+                    <div class="form-field">
+                        <label>Year Established</label>
+                        <input type="number" placeholder="2010" data-field="yearEstablished" onchange={handleInput}/>
+                    </div>
+                    <div class="form-field">
+                        <label>Annual Revenue</label>
+                        <select data-field="annualRevenue" onchange={handleInput}>
+                            <option value="under_1m">Under $1M</option>
+                            <option value="1m_10m">$1M – $10M</option>
+                            <option value="10m_50m">$10M – $50M</option>
+                            <option value="50m_250m">$50M – $250M</option>
+                            <option value="over_250m">Over $250M</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Number of Employees</label>
+                        <input type="number" placeholder="50" data-field="employees" onchange={handleInput}/>
+                    </div>
+                </div>
+                <div class="step-actions">
+                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 2: KYB / Beneficial Owners -->
+        <template if:true={isStep2}>
+            <div class="step-panel">
+                <h3 class="step-title" style={primaryTextStyle}>KYB — Beneficial Owners</h3>
+                <div class="kyb-info-box" style={infoBannerStyle}>
+                    <strong>FinCEN Requirement:</strong> Federal law requires identification of all individuals who own 25% or more of the company and one controlling person.
+                </div>
+                <template for:each={owners} for:item="owner">
+                    <div key={owner.id} class="owner-card">
+                        <div class="owner-card-header">
+                            <strong>Owner {owner.num}</strong>
+                            <button class="remove-btn" data-id={owner.id} onclick={removeOwner}>✕</button>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label>Full Name</label>
+                                <input type="text" placeholder="Jane Smith" data-owner-id={owner.id} data-field="name" onchange={handleOwnerInput}/>
+                            </div>
+                            <div class="form-field">
+                                <label>Title / Role</label>
+                                <input type="text" placeholder="CEO" data-owner-id={owner.id} data-field="title" onchange={handleOwnerInput}/>
+                            </div>
+                            <div class="form-field">
+                                <label>Ownership %</label>
+                                <input type="number" placeholder="25" data-owner-id={owner.id} data-field="ownership" onchange={handleOwnerInput}/>
+                            </div>
+                            <div class="form-field">
+                                <label>SSN</label>
+                                <input type="password" placeholder="XXX-XX-XXXX" data-owner-id={owner.id} data-field="ssn" onchange={handleOwnerInput}/>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <button class="btn-add" style={primaryTextStyle} onclick={addOwner}>+ Add Another Owner</button>
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
+                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 3: Banking Needs -->
+        <template if:true={isStep3}>
+            <div class="step-panel">
+                <h3 class="step-title" style={primaryTextStyle}>Banking Needs &amp; Services</h3>
+                <p class="step-sub">Select all services your business needs:</p>
+                <div class="services-grid">
+                    <template for:each={services} for:item="svc">
+                        <div key={svc.id} class={svc.cssClass} onclick={toggleService} data-id={svc.id} style={svc.selectedStyle}>
+                            <span class="svc-icon">{svc.icon}</span>
+                            <span class="svc-label">{svc.label}</span>
+                            <span class="svc-check" style={svc.checkStyle}>✓</span>
+                        </div>
+                    </template>
+                </div>
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
+                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 4: Document Upload -->
+        <template if:true={isStep4}>
+            <div class="step-panel">
+                <h3 class="step-title" style={primaryTextStyle}>Document Upload</h3>
+                <div class="doc-list">
+                    <template for:each={documents} for:item="doc">
+                        <div key={doc.id} class="doc-row">
+                            <div class="doc-info">
+                                <span class="doc-icon">{doc.icon}</span>
+                                <div>
+                                    <p class="doc-name">{doc.name}</p>
+                                    <p class="doc-req">{doc.required}</p>
+                                </div>
+                            </div>
+                            <div class="doc-status" style={doc.statusStyle}>
+                                {doc.status}
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="upload-note">
+                    In a live environment, documents are uploaded via Salesforce Files or integrated with DocuSign / Box.
+                </div>
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
+                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 5: Confirmation -->
+        <template if:true={isStep5}>
+            <div class="step-panel">
+                <div class="success-hero" style={primaryBgStyle}>
+                    <div class="success-check">✓</div>
+                    <h2>Application Submitted</h2>
+                    <p>Reference: <strong>{applicationRef}</strong></p>
+                </div>
+                <div class="next-steps">
+                    <h3>What happens next?</h3>
+                    <ol class="next-list">
+                        <li><strong>KYB Review</strong> — Our compliance team verifies business identity (1–2 business days)</li>
+                        <li><strong>Credit Assessment</strong> — Business credit profile reviewed</li>
+                        <li><strong>Account Setup</strong> — Treasury and payment channels configured per your selections</li>
+                        <li><strong>Dedicated Banker</strong> — Your relationship manager contacts you to finalize</li>
+                    </ol>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

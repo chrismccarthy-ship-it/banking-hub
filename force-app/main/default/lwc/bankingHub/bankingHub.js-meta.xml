@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>63.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightningCommunity__Default,lightning__RecordPage,lightning__AppPage,lightning__HomePage">
+
+            <!-- ═══ BRAND ═══ -->
+            <property
+                name="defaultBrand"
+                label="Default Bank Brand"
+                type="String"
+                default="truist"
+                description="Bank brand ID: truist | ally | citizens | citi | bofa" />
+
+            <property
+                name="customBrandLabel"
+                label="Custom Bank Name (optional)"
+                type="String"
+                description="Add a custom bank name to the brand switcher dropdown" />
+
+            <property
+                name="customBrandPrimary"
+                label="Custom Brand Primary Color"
+                type="String"
+                default="#000000"
+                description="Hex color for custom bank brand (e.g. #0057B8)" />
+
+            <!-- ═══ LOGO ═══ -->
+            <property
+                name="logoStaticResource"
+                label="Logo Static Resource Name"
+                type="String"
+                description="Name of the Static Resource in Salesforce containing the bank logo image (e.g. BofA_Logo). Leave blank to use text fallback." />
+
+            <property
+                name="logoHeight"
+                label="Logo Height (px)"
+                type="Integer"
+                default="32"
+                description="Height of the logo image in the header banner, in pixels." />
+
+            <!-- ═══ CREDIT SCORE ═══ -->
+            <property
+                name="fallbackCreditScore"
+                label="Fallback Credit Score"
+                type="Integer"
+                default="720"
+                description="Score shown when no Contact record or Credit_Score__c field value is available." />
+
+            <!-- ═══ APPLY NOW NAVIGATION ═══ -->
+            <property
+                name="premiumCardPageUrl"
+                label="Premium Rewards Card — Apply URL"
+                type="String"
+                default="/s/premium-rewards-card"
+                description="Experience Cloud page URL or external URL for the Premium Rewards card Apply Now button." />
+
+            <property
+                name="cashCardPageUrl"
+                label="Cash Rewards Card — Apply URL"
+                type="String"
+                default="/s/cash-rewards-card"
+                description="Experience Cloud page URL or external URL for the Cash Rewards card Apply Now button." />
+
+            <!-- ═══ NAV CATEGORY VISIBILITY ═══ -->
+            <property
+                name="showGetStarted"
+                label="Show: Get Started"
+                type="Boolean"
+                default="true"
+                description="Show or hide the Get Started nav tile." />
+
+            <property
+                name="showCreditCards"
+                label="Show: Credit Cards"
+                type="Boolean"
+                default="true"
+                description="Show or hide the Credit Cards nav tile." />
+
+            <property
+                name="showLoans"
+                label="Show: Loans"
+                type="Boolean"
+                default="true"
+                description="Show or hide the Loans nav tile." />
+
+            <property
+                name="showChecking"
+                label="Show: Checking"
+                type="Boolean"
+                default="true"
+                description="Show or hide the Checking nav tile." />
+
+            <property
+                name="showSavings"
+                label="Show: Savings"
+                type="Boolean"
+                default="true"
+                description="Show or hide the Savings nav tile." />
+
+            <property
+                name="showMortgage"
+                label="Show: Mortgage"
+                type="Boolean"
+                default="true"
+                description="Show or hide the Mortgage nav tile." />
+
+            <property
+                name="showCreditScore"
+                label="Show: Credit Score"
+                type="Boolean"
+                default="true"
+                description="Show or hide the Credit Score nav tile." />
+
+            <property
+                name="showInvestments"
+                label="Show: Investments"
+                type="Boolean"
+                default="true"
+                description="Show or hide the Investments nav tile." />
+
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>
