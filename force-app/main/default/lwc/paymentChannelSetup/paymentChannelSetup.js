@@ -14,12 +14,12 @@ export default class PaymentChannelSetup extends LightningElement {
     @track wireData = {};
 
     @track wirePermissions = [
-        { id: 'domestic_outgoing', name: 'Domestic Outgoing Wires', desc: 'Send USD wires via Fedwire/CHIPS', enabled: true, toggleStyle: 'background:#5a3fc0;' },
-        { id: 'domestic_incoming', name: 'Domestic Incoming Wires', desc: 'Receive USD wires', enabled: true, toggleStyle: 'background:#5a3fc0;' },
-        { id: 'international_outgoing', name: 'International Outgoing Wires', desc: 'Send foreign currency via SWIFT', enabled: false, toggleStyle: '' },
-        { id: 'international_incoming', name: 'International Incoming Wires', desc: 'Receive foreign currency wires', enabled: false, toggleStyle: '' },
-        { id: 'repetitive', name: 'Repetitive Wire Templates', desc: 'Save and reuse beneficiary details', enabled: true, toggleStyle: 'background:#5a3fc0;' },
-        { id: 'non_repetitive', name: 'Non-Repetitive Wires', desc: 'One-time ad-hoc wire entries', enabled: false, toggleStyle: '' }
+        { id: 'domestic_outgoing', name: 'Domestic Outgoing Wires', desc: 'Send USD wires via Fedwire/CHIPS', enabled: true },
+        { id: 'domestic_incoming', name: 'Domestic Incoming Wires', desc: 'Receive USD wires', enabled: true },
+        { id: 'international_outgoing', name: 'International Outgoing Wires', desc: 'Send foreign currency via SWIFT', enabled: false },
+        { id: 'international_incoming', name: 'International Incoming Wires', desc: 'Receive foreign currency wires', enabled: false },
+        { id: 'repetitive', name: 'Repetitive Wire Templates', desc: 'Save and reuse beneficiary details', enabled: true },
+        { id: 'non_repetitive', name: 'Non-Repetitive Wires', desc: 'One-time ad-hoc wire entries', enabled: false }
     ];
 
     get showSftp() { return this.activeChannel === 'sftp'; }
@@ -51,15 +51,17 @@ export default class PaymentChannelSetup extends LightningElement {
     handleAchInput(event) { this.achData = { ...this.achData, [event.target.dataset.field]: event.target.value }; }
     handleWireInput(event) { this.wireData = { ...this.wireData, [event.target.dataset.field]: event.target.value }; }
 
+    // Toggle colour is derived from the active brand on every render, so it follows brand switches.
+    get permissionRows() {
+        return this.wirePermissions.map(p => ({
+            ...p,
+            toggleStyle: p.enabled ? `background:${this.brand.primaryColor};` : ''
+        }));
+    }
+
     togglePerm(event) {
         const id = event.target.dataset.id;
-        this.wirePermissions = this.wirePermissions.map(p => {
-            if (p.id === id) {
-                const enabled = !p.enabled;
-                return { ...p, enabled, toggleStyle: enabled ? `background:${this.brand.primaryColor};` : '' };
-            }
-            return p;
-        });
+        this.wirePermissions = this.wirePermissions.map(p => (p.id === id ? { ...p, enabled: !p.enabled } : p));
     }
 
     testSftp() { alert('SFTP connection test: checking host reachability and credentials...'); }

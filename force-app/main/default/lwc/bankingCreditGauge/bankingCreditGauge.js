@@ -9,10 +9,12 @@ export default class CreditScoreGauge extends LightningElement {
     @api brandColor = '#5a3fc0';
     @api contactId;
     @api fallbackScore = 720;
+    // Score supplied by a parent (e.g. bankingHub). Takes precedence over the wire and the fallback.
+    @api creditScore;
 
     @track _resolvedScore = null;
 
-    @wire(getRecord, { recordId: '$contactId', fields: [CREDIT_SCORE_FIELD] })
+    @wire(getRecord, { recordId: '$contactId', optionalFields: [CREDIT_SCORE_FIELD] })
     wiredContact({ data, error }) {
         if (data) {
             const val = getFieldValue(data, CREDIT_SCORE_FIELD);
@@ -20,13 +22,15 @@ export default class CreditScoreGauge extends LightningElement {
         }
     }
 
-    get creditScore() {
+    get displayScore() {
+        const fromParent = Number(this.creditScore);
+        if (Number.isFinite(fromParent) && fromParent > 0) return fromParent;
         return this._resolvedScore || this.fallbackScore || 720;
     }
 
     // Map 300–850 to 0–1
     get scoreRatio() {
-        return Math.min(Math.max((this.creditScore - 300) / 550, 0), 1);
+        return Math.min(Math.max((this.displayScore - 300) / 550, 0), 1);
     }
 
     // Dash array for the filled arc
@@ -57,7 +61,7 @@ export default class CreditScoreGauge extends LightningElement {
 
     // Color based on score tier
     get arcColor() {
-        const s = this.creditScore;
+        const s = this.displayScore;
         if (s >= 800) return '#1a6b3a';
         if (s >= 740) return '#2e7d32';
         if (s >= 670) return '#558b2f';
@@ -66,7 +70,7 @@ export default class CreditScoreGauge extends LightningElement {
     }
 
     get tierLabel() {
-        const s = this.creditScore;
+        const s = this.displayScore;
         if (s >= 800) return 'Exceptional';
         if (s >= 740) return 'Very Good';
         if (s >= 670) return 'Good';
@@ -79,7 +83,7 @@ export default class CreditScoreGauge extends LightningElement {
     }
 
     get gaugeAriaLabel() {
-        return `Credit score gauge: ${this.creditScore} — ${this.tierLabel}`;
+        return `Credit score gauge: ${this.displayScore} — ${this.tierLabel}`;
     }
 
     get tierBadgeStyle() {
