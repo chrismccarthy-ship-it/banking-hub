@@ -221,8 +221,20 @@ export default class BankingHub extends NavigationMixin(LightningElement) {
         return { ...task, cssClass: active ? 'task task--active' : 'task', ariaCurrent: active ? 'true' : null };
     }
 
+    get visibleRetailTasks() {
+        return RETAIL_TASKS.filter(t => this[t.flag] !== false);
+    }
+
+    // The task actually shown: the chosen one if it's visible, otherwise the first visible task.
+    // Keeps a hidden default (e.g. Credit cards for a bank that doesn't offer them) from opening.
+    get currentRetailId() {
+        const visible = this.visibleRetailTasks;
+        if (visible.some(t => t.id === this.activeRetailId)) return this.activeRetailId;
+        return visible.length ? visible[0].id : null;
+    }
+
     get retailTasks() {
-        return RETAIL_TASKS.filter(t => this[t.flag] !== false).map(t => this.decorate(t, this.activeRetailId));
+        return this.visibleRetailTasks.map(t => this.decorate(t, this.currentRetailId));
     }
 
     get commercialTasks() {
@@ -240,14 +252,14 @@ export default class BankingHub extends NavigationMixin(LightningElement) {
     }
 
     // ── Retail panels ──
-    get showRetailOnboarding() { return this.activeRetailId === 'onboarding'; }
-    get showLoanApplication()  { return this.activeRetailId === 'loans' && this.selectedLoanType !== 'menu'; }
-    get showLoanMenu()         { return this.activeRetailId === 'loans' && this.selectedLoanType === 'menu'; }
-    get showCreditCard()       { return this.activeRetailId === 'creditCard'; }
-    get showPlaceholder()      { return !['onboarding', 'loans', 'creditCard'].includes(this.activeRetailId); }
+    get showRetailOnboarding() { return this.currentRetailId === 'onboarding'; }
+    get showLoanApplication()  { return this.currentRetailId === 'loans' && this.selectedLoanType !== 'menu'; }
+    get showLoanMenu()         { return this.currentRetailId === 'loans' && this.selectedLoanType === 'menu'; }
+    get showCreditCard()       { return this.currentRetailId === 'creditCard'; }
+    get showPlaceholder()      { return !!this.currentRetailId && !['onboarding', 'loans', 'creditCard'].includes(this.currentRetailId); }
 
     get activeRetailLabel() {
-        const task = RETAIL_TASKS.find(t => t.id === this.activeRetailId);
+        const task = RETAIL_TASKS.find(t => t.id === this.currentRetailId);
         return task ? task.label : '';
     }
 
@@ -255,7 +267,22 @@ export default class BankingHub extends NavigationMixin(LightningElement) {
 
     selectLoan(event) { this.selectedLoanType = event.currentTarget.dataset.id; }
     backToLoans() { this.selectedLoanType = 'menu'; }
-    showCards() { this.activeRetailId = 'creditCard'; }
+    // First fully built task that is visible, for the empty state's button.
+    get builtRetailTask() {
+        return ['creditCard', 'onboarding', 'loans']
+            .map(id => this.visibleRetailTasks.find(t => t.id === id))
+            .find(Boolean);
+    }
+
+    get hasBuiltRetailTask() { return !!this.builtRetailTask; }
+    get builtRetailLabel() { return this.builtRetailTask ? `Go to ${this.builtRetailTask.label.toLowerCase()}` : ''; }
+
+    showBuiltTask() {
+        if (this.builtRetailTask) {
+            this.activeRetailId = this.builtRetailTask.id;
+            this.selectedLoanType = 'menu';
+        }
+    }
 
     // ── Commercial panels ──
     get showCommercialOnboarding() { return this.activeCommercialId === 'commercialOnboarding'; }

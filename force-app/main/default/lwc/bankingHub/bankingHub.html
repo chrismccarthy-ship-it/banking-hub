@@ -144,7 +144,9 @@
                         <div class="empty">
                             <h2 class="section-heading">{activeRetailLabel} isn't in this demo yet</h2>
                             <p class="lede">Credit cards, loans and account opening are fully built. Pick one of those to continue.</p>
-                            <button class="btn btn-secondary" onclick={showCards}>Show credit cards</button>
+                            <template lwc:if={hasBuiltRetailTask}>
+                                <button class="btn btn-secondary" onclick={showBuiltTask}>{builtRetailLabel}</button>
+                            </template>
                         </div>
                     </template>
                 </section>
