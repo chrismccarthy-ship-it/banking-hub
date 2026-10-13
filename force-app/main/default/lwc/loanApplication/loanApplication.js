@@ -1,8 +1,19 @@
 import { LightningElement, api, track } from 'lwc';
+import { brandStyle } from 'c/bankingTheme';
 
+// Illustrative demo rates; production pulls pricing from the loan origination system.
 const RATES = { auto: 5.49, home: 6.75, personal: 8.99 };
-const ICONS = { auto: '🚗', home: '🏠', personal: '💵' };
-const TITLES = { auto: 'Auto Loan', home: 'Home Mortgage', personal: 'Personal Loan' };
+const TITLES = { auto: 'Auto loan', home: 'Home loan', personal: 'Personal loan' };
+const FIRST_STEP = { auto: 'Vehicle', home: 'Property', personal: 'Loan details' };
+const AUTO_TERM_MONTHS = 60;
+
+const usd = n => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+function monthlyPayment(principal, annualRate, months) {
+    const r = annualRate / 100 / 12;
+    if (!(principal > 0) || !(months > 0)) return null;
+    return principal * (r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
+}
 
 export default class LoanApplication extends LightningElement {
     @api brand = {};
@@ -12,13 +23,15 @@ export default class LoanApplication extends LightningElement {
     @track loanApproved = false;
     @track loanRef = '';
     @track loanData = {
-        vehicleYear: '2024', vehicleMake: '', vehicleModel: '',
-        vehicleCondition: 'new', vehiclePrice: '', downPayment: '',
+        vehicleYear: '2025', vehicleMake: '', vehicleModel: '',
+        vehicleCondition: 'new', vehiclePrice: '35000', downPayment: '',
         propertyAddress: '', propertyType: 'single_family',
-        purchasePurpose: 'purchase', propertyValue: '', loanTerm: '30',
-        loanPurpose: 'debt_consolidation', loanAmount: '',
+        purchasePurpose: 'purchase', propertyValue: '450000', loanTerm: '',  // '' = the first option: 30-year (home) or 60 months (personal)
+        loanPurpose: 'debt_consolidation', loanAmount: '15000',
         employmentStatus: 'employed', employer: '', annualIncome: '', yearsEmployed: '', otherIncome: '0'
     };
+
+    get brandStyle() { return brandStyle(this.brand); }
 
     get isAutoLoan() { return this.loanType === 'auto'; }
     get isHomeLoan() { return this.loanType === 'home'; }
@@ -26,44 +39,70 @@ export default class LoanApplication extends LightningElement {
     get isStep1() { return this.currentStep === 1; }
     get isStep2() { return this.currentStep === 2; }
     get isStep3() { return this.currentStep === 3; }
-    get totalSteps() { return 3; }
-    get loanIcon() { return ICONS[this.loanType] || '💰'; }
     get loanTitle() { return TITLES[this.loanType] || 'Loan'; }
-    get startingRate() { return `${RATES[this.loanType]}%`; }
+    get rate() { return RATES[this.loanType] || RATES.auto; }
+    get startingRate() { return `${this.rate}%`; }
+    get firstStepName() { return FIRST_STEP[this.loanType] || 'Loan details'; }
 
-    get headerStyle() { return `background:${this.brand.primaryColor};`; }
-    get primaryBtnStyle() { return `background:${this.brand.primaryColor}; border-radius:${this.brand.buttonRadius || '6px'};`; }
-    get primaryTextStyle() { return `color:${this.brand.primaryColor};`; }
-    get calcBoxStyle() { return `background:${this.brand.primaryLight || '#f8f6ff'}; border-left:3px solid ${this.brand.primaryColor};`; }
-    get successStyle() { return `background:${this.brand.primaryLight}; border-left:4px solid ${this.brand.primaryColor};`; }
-    get progressStyle() {
-        const pct = ((this.currentStep - 1) / (this.totalSteps - 1)) * 100;
-        return `width:${pct}%; background:${this.brand.primaryColor};`;
+    get steps() {
+        const names = [this.firstStepName, 'Employment and income', 'Review'];
+        return names.map((name, i) => {
+            const id = i + 1;
+            const done = id < this.currentStep;
+            const current = id === this.currentStep;
+            return {
+                id, name,
+                status: done ? 'Complete' : current ? 'In progress' : id === 3 ? 'About 1 minute' : 'Next',
+                cssClass: `step ${done ? 'step--done' : ''} ${current ? 'step--current' : ''}`,
+                ariaCurrent: current ? 'step' : null
+            };
+        });
     }
 
-    // Calculated fields
-    get estimatedLoanAmount() {
-        const price = parseFloat(this.loanData.vehiclePrice) || 0;
-        const down = parseFloat(this.loanData.downPayment) || 0;
-        return `$${Math.max(0, price - down).toLocaleString()}`;
+    // ── Estimate panel ──
+    get price() { return parseFloat(this.loanData.vehiclePrice) || 0; }
+    get down() { return parseFloat(this.loanData.downPayment) || 0; }
+
+    get financed() {
+        if (this.isHomeLoan) return Math.max(0, (parseFloat(this.loanData.propertyValue) || 0) - (this.down || 0));
+        if (this.isPersonalLoan) return parseFloat(this.loanData.loanAmount) || 0;
+        return Math.max(0, this.price - this.down);
     }
 
-    get estimatedMonthlyPayment() {
-        const val = parseFloat(this.loanData.propertyValue) || 450000;
-        const down = parseFloat(this.loanData.downPayment) || 90000;
-        const principal = val - down;
-        const r = RATES.home / 100 / 12;
-        const n = 360;
-        const payment = principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-        return isNaN(payment) ? '$--' : `$${Math.round(payment).toLocaleString()}/mo`;
+    get termMonths() {
+        if (this.isHomeLoan) return this.loanData.loanTerm === '15' ? 180 : 360;
+        if (this.isPersonalLoan) return parseInt(this.loanData.loanTerm, 10) || 60;
+        return AUTO_TERM_MONTHS;
     }
 
-    get personalMonthlyPayment() {
-        const amt = parseFloat(this.loanData.loanAmount) || 15000;
-        const months = parseInt(this.loanData.loanTerm, 10) || 60;
-        const r = RATES.personal / 100 / 12;
-        const payment = amt * (r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
-        return isNaN(payment) ? '$--' : `$${Math.round(payment).toLocaleString()}/mo`;
+    get termLabel() {
+        if (this.isHomeLoan) return this.loanData.loanTerm === '15' ? '15-year fixed' : '30-year fixed';
+        return `${this.termMonths} months`;
+    }
+
+    get monthlyEstimate() {
+        const p = monthlyPayment(this.financed, this.rate, this.termMonths);
+        return p ? usd(Math.round(p)) : '$0';
+    }
+
+    get financedText() { return usd(this.financed); }
+    get downText() { return this.down ? `-${usd(this.down)}` : '$0'; }
+    get downShare() {
+        const base = this.isHomeLoan ? parseFloat(this.loanData.propertyValue) || 0 : this.price;
+        if (!base || !this.down) return '';
+        return `${Math.round((this.down / base) * 100)}% of the price. 10% or more can lower your rate.`;
+    }
+    get hasDownShare() { return !!this.downShare; }
+    get showDownPaymentRow() { return !this.isPersonalLoan; }
+
+    // ── Review ──
+    get employmentLabel() {
+        const map = { employed: 'Employed full-time', self_employed: 'Self-employed', part_time: 'Employed part-time', retired: 'Retired' };
+        return map[this.loanData.employmentStatus] || this.loanData.employmentStatus;
+    }
+    get incomeText() {
+        const n = parseFloat(this.loanData.annualIncome);
+        return n ? usd(n) : 'Not provided';
     }
 
     handleInput(event) {
@@ -71,8 +110,12 @@ export default class LoanApplication extends LightningElement {
         this.loanData = { ...this.loanData, [field]: event.target.value };
     }
 
-    nextStep() { if (this.currentStep < this.totalSteps) this.currentStep++; }
+    nextStep() { if (this.currentStep < 3) this.currentStep++; }
     prevStep() { if (this.currentStep > 1) this.currentStep--; }
+
+    get showBack() { return this.currentStep > 1 && !this.loanApproved; }
+    get showContinue() { return this.currentStep < 3; }
+    get showSubmit() { return this.currentStep === 3 && !this.loanApproved; }
 
     submitLoan() {
         this.loanRef = 'LN-' + Math.floor(100000 + Math.random() * 900000);

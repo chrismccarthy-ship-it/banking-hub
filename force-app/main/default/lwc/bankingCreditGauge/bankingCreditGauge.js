@@ -83,7 +83,7 @@ export default class CreditScoreGauge extends LightningElement {
     }
 
     get gaugeAriaLabel() {
-        return `Credit score gauge: ${this.displayScore} — ${this.tierLabel}`;
+        return `Credit score ${this.displayScore} out of 850, ${this.tierLabel}`;
     }
 
     get tierBadgeStyle() {

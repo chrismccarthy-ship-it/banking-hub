@@ -1,231 +1,210 @@
 <template>
-    <div class="loan-wrap">
-        <!-- Loan type header -->
-        <div class="loan-header" style={headerStyle}>
-            <span class="loan-type-icon">{loanIcon}</span>
-            <div>
-                <h2 class="loan-header-title">{loanTitle}</h2>
-                <p class="loan-header-sub">Starting rate: {startingRate} APR · Est. time: 5 min</p>
-            </div>
+    <div class="bh loan" style={brandStyle}>
+        <div class="head">
+            <h2 class="view-title">{loanTitle} application</h2>
+            <p class="lede">Rates from {startingRate} APR. Checking your rate won't affect your credit score.</p>
         </div>
 
-        <!-- Progress -->
-        <div class="progress-track"><div class="progress-fill" style={progressStyle}></div></div>
-        <p class="step-counter" style={primaryTextStyle}>Step {currentStep} of {totalSteps}</p>
-
-        <!-- ── AUTO LOAN STEPS ── -->
-        <template if:true={isAutoLoan}>
-            <template if:true={isStep1}>
-                <div class="step-panel">
-                    <h3 class="step-title">Vehicle Information</h3>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>Vehicle Year</label>
-                            <select data-field="vehicleYear" onchange={handleInput}>
-                                <option>2025</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>Make</label>
-                            <input type="text" placeholder="Toyota" data-field="vehicleMake" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Model</label>
-                            <input type="text" placeholder="Camry" data-field="vehicleModel" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Condition</label>
-                            <select data-field="vehicleCondition" onchange={handleInput}>
-                                <option value="new">New</option>
-                                <option value="used">Used</option>
-                                <option value="certified">Certified Pre-Owned</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>Purchase Price</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="35000" data-field="vehiclePrice" onchange={handleInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Down Payment</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="5000" data-field="downPayment" onchange={handleInput}/></div>
-                        </div>
-                    </div>
-                    <div class="loan-calc-box" style={calcBoxStyle}>
-                        <span>Estimated Loan Amount:</span>
-                        <strong style={primaryTextStyle}>{estimatedLoanAmount}</strong>
-                    </div>
-                    <div class="step-actions">
-                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                    </div>
-                </div>
+        <ol class="steps" aria-label="Progress">
+            <template for:each={steps} for:item="s">
+                <li key={s.id} class={s.cssClass} aria-current={s.ariaCurrent}>{s.name}<small>{s.status}</small></li>
             </template>
-        </template>
+        </ol>
 
-        <!-- ── HOME LOAN STEPS ── -->
-        <template if:true={isHomeLoan}>
-            <template if:true={isStep1}>
-                <div class="step-panel">
-                    <h3 class="step-title">Property Details</h3>
-                    <div class="form-grid">
-                        <div class="form-field form-field--full">
-                            <label>Property Address</label>
-                            <input type="text" placeholder="123 Oak Street, Charlotte, NC 28202" data-field="propertyAddress" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Property Type</label>
-                            <select data-field="propertyType" onchange={handleInput}>
-                                <option value="single_family">Single Family</option>
-                                <option value="condo">Condominium</option>
-                                <option value="multi_family">Multi-Family</option>
-                                <option value="townhouse">Townhouse</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>Purchase Purpose</label>
-                            <select data-field="purchasePurpose" onchange={handleInput}>
-                                <option value="purchase">Purchase</option>
-                                <option value="refinance">Refinance</option>
-                                <option value="cash_out">Cash-Out Refinance</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>Purchase Price / Value</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="450000" data-field="propertyValue" onchange={handleInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Down Payment</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="90000" data-field="downPayment" onchange={handleInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Loan Term</label>
-                            <select data-field="loanTerm" onchange={handleInput}>
-                                <option value="30">30-year fixed</option>
-                                <option value="15">15-year fixed</option>
-                                <option value="10_1_arm">10/1 ARM</option>
-                                <option value="7_1_arm">7/1 ARM</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="loan-calc-box" style={calcBoxStyle}>
-                        <span>Estimated Monthly Payment:</span>
-                        <strong style={primaryTextStyle}>{estimatedMonthlyPayment}</strong>
-                    </div>
-                    <div class="step-actions">
-                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                    </div>
-                </div>
-            </template>
-        </template>
+        <div class="layout">
+            <section class="form" aria-live="polite">
 
-        <!-- ── PERSONAL LOAN STEPS ── -->
-        <template if:true={isPersonalLoan}>
-            <template if:true={isStep1}>
-                <div class="step-panel">
-                    <h3 class="step-title">Loan Details</h3>
-                    <div class="form-grid">
-                        <div class="form-field form-field--full">
-                            <label>Loan Purpose</label>
-                            <select data-field="loanPurpose" onchange={handleInput}>
-                                <option value="debt_consolidation">Debt Consolidation</option>
-                                <option value="home_improvement">Home Improvement</option>
-                                <option value="medical">Medical Expenses</option>
-                                <option value="wedding">Wedding</option>
-                                <option value="vacation">Vacation</option>
-                                <option value="other">Other</option>
+                <!-- Step 1: Auto -->
+                <template lwc:if={isStep1}>
+                    <template lwc:if={isAutoLoan}>
+                        <h3 class="section-heading">Vehicle information</h3>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="vYear">Year</label>
+                                <select id="vYear" class="select" data-field="vehicleYear" onchange={handleInput}>
+                                    <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="vCond">Condition</label>
+                                <select id="vCond" class="select" data-field="vehicleCondition" onchange={handleInput}>
+                                    <option value="new">New</option>
+                                    <option value="used">Used</option>
+                                    <option value="certified">Certified pre-owned</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="vMake">Make</label>
+                                <input id="vMake" class="input" type="text" value={loanData.vehicleMake} data-field="vehicleMake" onchange={handleInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="vModel">Model</label>
+                                <input id="vModel" class="input" type="text" value={loanData.vehicleModel} data-field="vehicleModel" onchange={handleInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="vPrice">Purchase price</label>
+                                <div class="affix"><span>$</span><input id="vPrice" type="number" value={loanData.vehiclePrice} data-field="vehiclePrice" onchange={handleInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="vDown">Down payment</label>
+                                <div class="affix"><span>$</span><input id="vDown" type="number" value={loanData.downPayment} data-field="downPayment" onchange={handleInput}/></div>
+                                <template lwc:if={hasDownShare}><p class="help">{downShare}</p></template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Step 1: Home -->
+                    <template lwc:if={isHomeLoan}>
+                        <h3 class="section-heading">Property details</h3>
+                        <div class="grid">
+                            <div class="field full">
+                                <label for="pAddr">Property address</label>
+                                <input id="pAddr" class="input" type="text" value={loanData.propertyAddress} data-field="propertyAddress" onchange={handleInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="pType">Property type</label>
+                                <select id="pType" class="select" data-field="propertyType" onchange={handleInput}>
+                                    <option value="single_family">Single family</option>
+                                    <option value="condo">Condominium</option>
+                                    <option value="multi_family">Multi-family</option>
+                                    <option value="townhouse">Townhouse</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="pPurpose">Purpose</label>
+                                <select id="pPurpose" class="select" data-field="purchasePurpose" onchange={handleInput}>
+                                    <option value="purchase">Purchase</option>
+                                    <option value="refinance">Refinance</option>
+                                    <option value="cash_out">Cash-out refinance</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="pValue">Purchase price or value</label>
+                                <div class="affix"><span>$</span><input id="pValue" type="number" value={loanData.propertyValue} data-field="propertyValue" onchange={handleInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="pDown">Down payment</label>
+                                <div class="affix"><span>$</span><input id="pDown" type="number" value={loanData.downPayment} data-field="downPayment" onchange={handleInput}/></div>
+                                <template lwc:if={hasDownShare}><p class="help">{downShare}</p></template>
+                            </div>
+                            <div class="field">
+                                <label for="pTerm">Loan term</label>
+                                <select id="pTerm" class="select" data-field="loanTerm" onchange={handleInput}>
+                                    <option value="30">30-year fixed</option>
+                                    <option value="15">15-year fixed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Step 1: Personal -->
+                    <template lwc:if={isPersonalLoan}>
+                        <h3 class="section-heading">Loan details</h3>
+                        <div class="grid">
+                            <div class="field full">
+                                <label for="lPurpose">What's it for?</label>
+                                <select id="lPurpose" class="select" data-field="loanPurpose" onchange={handleInput}>
+                                    <option value="debt_consolidation">Debt consolidation</option>
+                                    <option value="home_improvement">Home improvement</option>
+                                    <option value="medical">Medical expenses</option>
+                                    <option value="major_purchase">Major purchase</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="lAmount">Amount</label>
+                                <div class="affix"><span>$</span><input id="lAmount" type="number" value={loanData.loanAmount} data-field="loanAmount" onchange={handleInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="lTerm">Term</label>
+                                <select id="lTerm" class="select" data-field="loanTerm" onchange={handleInput}>
+                                    <option value="60">60 months</option>
+                                    <option value="36">36 months</option>
+                                    <option value="48">48 months</option>
+                                    <option value="72">72 months</option>
+                                    <option value="84">84 months</option>
+                                </select>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- Step 2: Employment and income -->
+                <template lwc:if={isStep2}>
+                    <h3 class="section-heading">Employment and income</h3>
+                    <div class="grid">
+                        <div class="field">
+                            <label for="eStatus">Employment status</label>
+                            <select id="eStatus" class="select" data-field="employmentStatus" onchange={handleInput}>
+                                <option value="employed">Employed full-time</option>
+                                <option value="self_employed">Self-employed</option>
+                                <option value="part_time">Employed part-time</option>
+                                <option value="retired">Retired</option>
                             </select>
                         </div>
-                        <div class="form-field">
-                            <label>Loan Amount</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="15000" data-field="loanAmount" onchange={handleInput}/></div>
+                        <div class="field">
+                            <label for="eName">Employer</label>
+                            <input id="eName" class="input" type="text" value={loanData.employer} data-field="employer" onchange={handleInput}/>
                         </div>
-                        <div class="form-field">
-                            <label>Loan Term</label>
-                            <select data-field="loanTerm" onchange={handleInput}>
-                                <option value="24">24 months</option>
-                                <option value="36">36 months</option>
-                                <option value="48">48 months</option>
-                                <option value="60">60 months</option>
-                                <option value="84">84 months</option>
-                            </select>
+                        <div class="field">
+                            <label for="eIncome">Annual gross income</label>
+                            <div class="affix"><span>$</span><input id="eIncome" type="number" value={loanData.annualIncome} data-field="annualIncome" onchange={handleInput}/></div>
                         </div>
-                    </div>
-                    <div class="loan-calc-box" style={calcBoxStyle}>
-                        <span>Estimated Monthly Payment:</span>
-                        <strong style={primaryTextStyle}>{personalMonthlyPayment}</strong>
-                    </div>
-                    <div class="step-actions">
-                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                    </div>
-                </div>
-            </template>
-        </template>
-
-        <!-- Step 2: Employment & Income (all loan types) -->
-        <template if:true={isStep2}>
-            <div class="step-panel">
-                <h3 class="step-title">Employment &amp; Income</h3>
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label>Employment Status</label>
-                        <select data-field="employmentStatus" onchange={handleInput}>
-                            <option value="employed">Employed Full-Time</option>
-                            <option value="self_employed">Self-Employed</option>
-                            <option value="part_time">Employed Part-Time</option>
-                            <option value="retired">Retired</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label>Employer Name</label>
-                        <input type="text" placeholder="Acme Corp" data-field="employer" onchange={handleInput}/>
-                    </div>
-                    <div class="form-field">
-                        <label>Annual Gross Income</label>
-                        <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                        <input type="number" placeholder="85000" data-field="annualIncome" onchange={handleInput}/></div>
-                    </div>
-                    <div class="form-field">
-                        <label>Years at Current Job</label>
-                        <input type="number" placeholder="3" data-field="yearsEmployed" onchange={handleInput}/>
-                    </div>
-                    <div class="form-field form-field--full">
-                        <label>Other Monthly Income (optional)</label>
-                        <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                        <input type="number" placeholder="0" data-field="otherIncome" onchange={handleInput}/></div>
-                    </div>
-                </div>
-                <div class="step-actions">
-                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                </div>
-            </div>
-        </template>
-
-        <!-- Step 3: Review & Submit -->
-        <template if:true={isStep3}>
-            <div class="step-panel">
-                <h3 class="step-title">Review &amp; Submit</h3>
-                <div class="review-card">
-                    <div class="review-row"><span class="review-label">Loan Type</span><span>{loanTitle}</span></div>
-                    <div class="review-row"><span class="review-label">Employment</span><span>{loanData.employmentStatus}</span></div>
-                    <div class="review-row"><span class="review-label">Annual Income</span><span>${loanData.annualIncome}</span></div>
-                    <div class="review-row"><span class="review-label">Starting Rate</span><span style={primaryTextStyle}><strong>{startingRate} APR</strong></span></div>
-                </div>
-                <template if:true={loanApproved}>
-                    <div class="success-banner" style={successStyle}>
-                        ✅ Pre-qualified! Loan reference: <strong>{loanRef}</strong>. A banker will contact you within 1 business day.
+                        <div class="field">
+                            <label for="eYears">Years at current job</label>
+                            <input id="eYears" class="input" type="number" value={loanData.yearsEmployed} data-field="yearsEmployed" onchange={handleInput}/>
+                        </div>
+                        <div class="field full">
+                            <label for="eOther">Other monthly income (optional)</label>
+                            <div class="affix"><span>$</span><input id="eOther" type="number" value={loanData.otherIncome} data-field="otherIncome" onchange={handleInput}/></div>
+                            <p class="help">Rental, alimony or investment income you want considered.</p>
+                        </div>
                     </div>
                 </template>
-                <div class="step-actions">
-                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={submitLoan}>Submit Application</button>
-                </div>
-            </div>
-        </template>
 
+                <!-- Step 3: Review -->
+                <template lwc:if={isStep3}>
+                    <h3 class="section-heading">Review and submit</h3>
+                    <dl class="dl card review">
+                        <dt>Loan</dt><dd>{loanTitle}</dd>
+                        <dt>Amount</dt><dd>{financedText}</dd>
+                        <dt>Term</dt><dd>{termLabel}</dd>
+                        <dt>Employment</dt><dd>{employmentLabel}</dd>
+                        <dt>Annual income</dt><dd>{incomeText}</dd>
+                        <dt class="total">Starting rate</dt><dd class="total">{startingRate} APR</dd>
+                    </dl>
+                    <template lwc:if={loanApproved}>
+                        <div class="notice notice--success" role="status">
+                            <strong>You're pre-qualified.</strong> Reference <strong class="num">{loanRef}</strong>. A banker will contact you within 1 business day.
+                        </div>
+                    </template>
+                </template>
+
+                <div class="actions">
+                    <template lwc:if={showBack}>
+                        <button class="btn btn-ghost" onclick={prevStep}>Back</button>
+                    </template>
+                    <span class="spacer"></span>
+                    <template lwc:if={showContinue}>
+                        <button class="btn btn-primary" onclick={nextStep}>Continue</button>
+                    </template>
+                    <template lwc:if={showSubmit}>
+                        <button class="btn btn-primary" onclick={submitLoan}>Submit application</button>
+                    </template>
+                </div>
+            </section>
+
+            <aside class="panel estimate" aria-live="polite">
+                <p class="label">Estimated monthly payment</p>
+                <p class="big num">{monthlyEstimate}<small>/mo</small></p>
+                <p class="help note">At {startingRate} APR over {termLabel}. Your final rate depends on credit review.</p>
+                <dl class="dl">
+                    <template lwc:if={showDownPaymentRow}>
+                        <dt>Down payment</dt><dd>{downText}</dd>
+                    </template>
+                    <dt class="total">Amount financed</dt><dd class="total">{financedText}</dd>
+                </dl>
+            </aside>
+        </div>
     </div>
 </template>

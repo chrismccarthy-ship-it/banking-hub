@@ -1,186 +1,194 @@
 <template>
-    <div class="comm-wrap">
-        <div class="comm-header" style={headerStyle}>
-            <h2>🏢 Commercial Banking Onboarding</h2>
-            <p>KYB verification · Treasury setup · Payment channel configuration</p>
+    <div class="bh comm" style={brandStyle}>
+        <div class="head">
+            <p class="eyebrow">Business banking</p>
+            <h2 class="view-title">Open a business account</h2>
+            <p class="lede">Business details, owners and services in one sitting. We only ask for documents your services need.</p>
         </div>
 
-        <div class="progress-track"><div class="progress-fill" style={progressStyle}></div></div>
-        <div class="step-tabs">
-            <template for:each={steps} for:item="step">
-                <button key={step.id} class={step.cssClass} onclick={goToStep} data-step={step.id} style={step.activeStyle}>
-                    <span class="step-tab-num" style={step.numStyle}>{step.num}</span>
-                    <span>{step.label}</span>
-                </button>
+        <ol class="steps" aria-label="Progress">
+            <template for:each={steps} for:item="s">
+                <li key={s.id}>
+                    <button class={s.cssClass} aria-current={s.ariaCurrent} data-step={s.id} onclick={goToStep} disabled={s.disabled}>{s.name}<small>{s.status}</small></button>
+                </li>
             </template>
-        </div>
+        </ol>
 
-        <!-- Step 1: Business Info -->
-        <template if:true={isStep1}>
-            <div class="step-panel">
-                <h3 class="step-title" style={primaryTextStyle}>Business Information</h3>
-                <div class="form-grid">
-                    <div class="form-field form-field--full">
-                        <label>Legal Business Name</label>
-                        <input type="text" placeholder="Acme Corporation LLC" data-field="legalName" onchange={handleInput}/>
+        <section aria-live="polite">
+
+            <!-- Step 1: Business details -->
+            <template lwc:if={isStep1}>
+                <h3 class="section-heading">Business details</h3>
+                <div class="grid">
+                    <div class="field full">
+                        <label for="legalName">Legal business name</label>
+                        <input id="legalName" class="input" type="text" value={formData.legalName} data-field="legalName" onchange={handleInput}/>
                     </div>
-                    <div class="form-field">
-                        <label>DBA (if different)</label>
-                        <input type="text" placeholder="Acme Corp" data-field="dba" onchange={handleInput}/>
+                    <div class="field">
+                        <label for="dba">Doing business as (optional)</label>
+                        <input id="dba" class="input" type="text" value={formData.dba} data-field="dba" onchange={handleInput}/>
                     </div>
-                    <div class="form-field">
-                        <label>Business Type</label>
-                        <select data-field="businessType" onchange={handleInput}>
+                    <div class="field">
+                        <label for="bizType">Business type</label>
+                        <select id="bizType" class="select" data-field="businessType" onchange={handleInput}>
                             <option value="llc">LLC</option>
-                            <option value="corporation">Corporation (C/S-Corp)</option>
+                            <option value="corporation">Corporation (C or S)</option>
                             <option value="partnership">Partnership</option>
-                            <option value="sole_prop">Sole Proprietorship</option>
-                            <option value="nonprofit">Non-Profit</option>
+                            <option value="sole_prop">Sole proprietorship</option>
+                            <option value="nonprofit">Nonprofit</option>
                         </select>
                     </div>
-                    <div class="form-field">
-                        <label>Industry / NAICS Code</label>
-                        <input type="text" placeholder="Financial Services - 5221" data-field="industry" onchange={handleInput}/>
+                    <div class="field">
+                        <label for="industry">Industry or NAICS code</label>
+                        <input id="industry" class="input" type="text" value={formData.industry} data-field="industry" onchange={handleInput}/>
                     </div>
-                    <div class="form-field">
-                        <label>EIN / Tax ID</label>
-                        <input type="text" placeholder="XX-XXXXXXX" data-field="ein" onchange={handleInput}/>
+                    <div class="field">
+                        <label for="ein">EIN</label>
+                        <input id="ein" class="input" type="text" inputmode="numeric" value={formData.ein} data-field="ein" onchange={handleInput}/>
+                        <p class="help">Nine digits, for example 12-3456789.</p>
                     </div>
-                    <div class="form-field">
-                        <label>Year Established</label>
-                        <input type="number" placeholder="2010" data-field="yearEstablished" onchange={handleInput}/>
+                    <div class="field">
+                        <label for="year">Year established</label>
+                        <input id="year" class="input" type="number" value={formData.yearEstablished} data-field="yearEstablished" onchange={handleInput}/>
                     </div>
-                    <div class="form-field">
-                        <label>Annual Revenue</label>
-                        <select data-field="annualRevenue" onchange={handleInput}>
+                    <div class="field">
+                        <label for="revenue">Annual revenue</label>
+                        <select id="revenue" class="select" data-field="annualRevenue" onchange={handleInput}>
                             <option value="under_1m">Under $1M</option>
-                            <option value="1m_10m">$1M – $10M</option>
-                            <option value="10m_50m">$10M – $50M</option>
-                            <option value="50m_250m">$50M – $250M</option>
+                            <option value="1m_10m" selected>$1M to $10M</option>
+                            <option value="10m_50m">$10M to $50M</option>
+                            <option value="50m_250m">$50M to $250M</option>
                             <option value="over_250m">Over $250M</option>
                         </select>
                     </div>
-                    <div class="form-field">
-                        <label>Number of Employees</label>
-                        <input type="number" placeholder="50" data-field="employees" onchange={handleInput}/>
+                    <div class="field">
+                        <label for="employees">Employees</label>
+                        <input id="employees" class="input" type="number" value={formData.employees} data-field="employees" onchange={handleInput}/>
                     </div>
                 </div>
-                <div class="step-actions">
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                </div>
-            </div>
-        </template>
+            </template>
 
-        <!-- Step 2: KYB / Beneficial Owners -->
-        <template if:true={isStep2}>
-            <div class="step-panel">
-                <h3 class="step-title" style={primaryTextStyle}>KYB — Beneficial Owners</h3>
-                <div class="kyb-info-box" style={infoBannerStyle}>
-                    <strong>FinCEN Requirement:</strong> Federal law requires identification of all individuals who own 25% or more of the company and one controlling person.
+            <!-- Step 2: Beneficial owners -->
+            <template lwc:if={isStep2}>
+                <h3 class="section-heading">Beneficial owners</h3>
+                <div class="notice kyb">
+                    <strong>FinCEN requirement:</strong> list everyone who owns 25% or more of {businessName}, plus one person with significant control, such as the CEO or managing member.
                 </div>
                 <template for:each={owners} for:item="owner">
-                    <div key={owner.id} class="owner-card">
-                        <div class="owner-card-header">
-                            <strong>Owner {owner.num}</strong>
-                            <button class="remove-btn" data-id={owner.id} onclick={removeOwner}>✕</button>
+                    <div key={owner.id} class="card owner">
+                        <div class="owner-head">
+                            <span class="section-heading">Owner {owner.num}</span>
+                            <template lwc:if={canRemoveOwner}>
+                                <button class="btn btn-ghost small" data-id={owner.id} onclick={removeOwner}>Remove</button>
+                            </template>
                         </div>
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label>Full Name</label>
-                                <input type="text" placeholder="Jane Smith" data-owner-id={owner.id} data-field="name" onchange={handleOwnerInput}/>
+                        <div class="grid">
+                            <div class="field">
+                                <label>Full name</label>
+                                <input class="input" type="text" value={owner.name} data-owner-id={owner.id} data-field="name" onchange={handleOwnerInput}/>
                             </div>
-                            <div class="form-field">
-                                <label>Title / Role</label>
-                                <input type="text" placeholder="CEO" data-owner-id={owner.id} data-field="title" onchange={handleOwnerInput}/>
+                            <div class="field">
+                                <label>Title or role</label>
+                                <input class="input" type="text" value={owner.title} data-owner-id={owner.id} data-field="title" onchange={handleOwnerInput}/>
                             </div>
-                            <div class="form-field">
-                                <label>Ownership %</label>
-                                <input type="number" placeholder="25" data-owner-id={owner.id} data-field="ownership" onchange={handleOwnerInput}/>
+                            <div class="field">
+                                <label>Ownership</label>
+                                <div class="affix"><input type="number" min="0" max="100" value={owner.ownership} data-owner-id={owner.id} data-field="ownership" onchange={handleOwnerInput}/><span class="suffix">%</span></div>
                             </div>
-                            <div class="form-field">
-                                <label>SSN</label>
-                                <input type="password" placeholder="XXX-XX-XXXX" data-owner-id={owner.id} data-field="ssn" onchange={handleOwnerInput}/>
+                            <div class="field">
+                                <label>Social Security number</label>
+                                <input class="input" type="password" autocomplete="off" value={owner.ssn} data-owner-id={owner.id} data-field="ssn" onchange={handleOwnerInput}/>
                             </div>
                         </div>
                     </div>
                 </template>
-                <button class="btn-add" style={primaryTextStyle} onclick={addOwner}>+ Add Another Owner</button>
-                <div class="step-actions">
-                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                </div>
-            </div>
-        </template>
+                <button class="btn btn-secondary" onclick={addOwner}>Add another owner</button>
+            </template>
 
-        <!-- Step 3: Banking Needs -->
-        <template if:true={isStep3}>
-            <div class="step-panel">
-                <h3 class="step-title" style={primaryTextStyle}>Banking Needs &amp; Services</h3>
-                <p class="step-sub">Select all services your business needs:</p>
-                <div class="services-grid">
-                    <template for:each={services} for:item="svc">
-                        <div key={svc.id} class={svc.cssClass} onclick={toggleService} data-id={svc.id} style={svc.selectedStyle}>
-                            <span class="svc-icon">{svc.icon}</span>
-                            <span class="svc-label">{svc.label}</span>
-                            <span class="svc-check" style={svc.checkStyle}>✓</span>
-                        </div>
-                    </template>
-                </div>
-                <div class="step-actions">
-                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                </div>
-            </div>
-        </template>
-
-        <!-- Step 4: Document Upload -->
-        <template if:true={isStep4}>
-            <div class="step-panel">
-                <h3 class="step-title" style={primaryTextStyle}>Document Upload</h3>
-                <div class="doc-list">
-                    <template for:each={documents} for:item="doc">
-                        <div key={doc.id} class="doc-row">
-                            <div class="doc-info">
-                                <span class="doc-icon">{doc.icon}</span>
-                                <div>
-                                    <p class="doc-name">{doc.name}</p>
-                                    <p class="doc-req">{doc.required}</p>
+            <!-- Step 3: Services -->
+            <template lwc:if={isStep3}>
+                <div class="layout">
+                    <div>
+                        <h3 class="section-heading">Which services does {businessName} need?</h3>
+                        <p class="help sub">Pick everything that applies.</p>
+                        <template for:each={serviceGroups} for:item="group">
+                            <fieldset key={group.id} class="group">
+                                <legend class="group-name">{group.label}</legend>
+                                <div class="list">
+                                    <template for:each={group.services} for:item="svc">
+                                        <label key={svc.id} class={svc.cssClass}>
+                                            <input type="checkbox" data-id={svc.id} checked={svc.checked} onchange={toggleService}/>
+                                            <span><span class="choice-name">{svc.label}</span><span class="choice-desc">{svc.description}</span></span>
+                                            <span class="row-meta">{svc.docs}</span>
+                                        </label>
+                                    </template>
                                 </div>
-                            </div>
-                            <div class="doc-status" style={doc.statusStyle}>
-                                {doc.status}
-                            </div>
-                        </div>
+                            </fieldset>
+                        </template>
+                    </div>
+                    <aside class="panel side" aria-live="polite">
+                        <p class="label">Selected</p>
+                        <p class="help">{selectedCountText}</p>
+                        <template lwc:if={hasSelected}>
+                            <ul class="checks checks--stack picked">
+                                <template for:each={selectedServices} for:item="svc">
+                                    <li key={svc.id}>{svc.label}</li>
+                                </template>
+                            </ul>
+                        </template>
+                        <dl class="dl">
+                            <dt>Required documents</dt><dd>{requiredDocCount}</dd>
+                            <dt>Typical approval</dt><dd>2 business days</dd>
+                        </dl>
+                    </aside>
+                </div>
+            </template>
+
+            <!-- Step 4: Documents -->
+            <template lwc:if={isStep4}>
+                <h3 class="section-heading">Documents</h3>
+                <p class="help sub">Upload now or after you submit. Your relationship manager sees what's outstanding.</p>
+                <ul class="list docs">
+                    <template for:each={documents} for:item="doc">
+                        <li key={doc.id} class="doc">
+                            <span><span class="choice-name">{doc.name}</span><span class="choice-desc">{doc.requirement}</span></span>
+                            <span class={doc.statusClass}>{doc.status}</span>
+                        </li>
+                    </template>
+                </ul>
+                <p class="help">In production, files go to Salesforce Files or your e-signature and storage tools.</p>
+            </template>
+
+            <!-- Submitted -->
+            <template lwc:if={isSubmitted}>
+                <div class="panel done" role="status">
+                    <p class="eyebrow">Application submitted</p>
+                    <h3 class="view-title">We have everything we need to start</h3>
+                    <p class="lede">Reference <strong class="num">{applicationRef}</strong></p>
+                </div>
+                <h3 class="section-heading next-title">What happens next</h3>
+                <ol class="next">
+                    <li><strong>KYB review.</strong> Compliance verifies the business and its owners, usually in 1 to 2 business days.</li>
+                    <li><strong>Credit review.</strong> Only for credit services you selected.</li>
+                    <li><strong>Account setup.</strong> Accounts and payment channels are set up as you chose.</li>
+                    <li><strong>Your banker calls.</strong> Your relationship manager confirms the details with you.</li>
+                </ol>
+            </template>
+
+            <template lwc:if={showActions}>
+                <div class="actions">
+                    <template lwc:if={showBack}>
+                        <button class="btn btn-ghost" onclick={prevStep}>Back</button>
+                    </template>
+                    <span class="spacer"></span>
+                    <template lwc:if={showContinue}>
+                        <button class="btn btn-primary" onclick={nextStep}>Continue</button>
+                    </template>
+                    <template lwc:if={isStep4}>
+                        <button class="btn btn-primary" onclick={submitApplication}>Submit application</button>
                     </template>
                 </div>
-                <div class="upload-note">
-                    In a live environment, documents are uploaded via Salesforce Files or integrated with DocuSign / Box.
-                </div>
-                <div class="step-actions">
-                    <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                </div>
-            </div>
-        </template>
-
-        <!-- Step 5: Confirmation -->
-        <template if:true={isStep5}>
-            <div class="step-panel">
-                <div class="success-hero" style={primaryBgStyle}>
-                    <div class="success-check">✓</div>
-                    <h2>Application Submitted</h2>
-                    <p>Reference: <strong>{applicationRef}</strong></p>
-                </div>
-                <div class="next-steps">
-                    <h3>What happens next?</h3>
-                    <ol class="next-list">
-                        <li><strong>KYB Review</strong> — Our compliance team verifies business identity (1–2 business days)</li>
-                        <li><strong>Credit Assessment</strong> — Business credit profile reviewed</li>
-                        <li><strong>Account Setup</strong> — Treasury and payment channels configured per your selections</li>
-                        <li><strong>Dedicated Banker</strong> — Your relationship manager contacts you to finalize</li>
-                    </ol>
-                </div>
-            </div>
-        </template>
+            </template>
+        </section>
     </div>
 </template>
