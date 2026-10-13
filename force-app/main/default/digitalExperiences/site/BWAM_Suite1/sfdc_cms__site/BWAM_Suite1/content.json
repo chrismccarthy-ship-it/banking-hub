@@ -1,0 +1,9 @@
+{
+  "type" : "sfdc_cms__site",
+  "title" : "BWAM Suite",
+  "contentBody" : {
+    "authenticationType" : "AUTHENTICATED",
+    "geoBotsAllowed" : false
+  },
+  "urlName" : "bwam-suite"
+}

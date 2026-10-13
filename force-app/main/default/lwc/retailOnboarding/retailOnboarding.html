@@ -1,195 +1,207 @@
 <template>
-    <div class="onboarding-wrap">
-        <!-- Progress bar -->
-        <div class="progress-bar-wrap">
-            <template for:each={steps} for:item="step">
-                <div key={step.id} class={step.cssClass} style={step.activeStyle}>
-                    <div class="step-circle" style={step.circleStyle}>{step.num}</div>
-                    <span class="step-label">{step.label}</span>
-                </div>
-            </template>
-        </div>
-        <div class="progress-track">
-            <div class="progress-fill" style={progressFillStyle}></div>
-        </div>
+    <div class="bh onboarding" style={brandStyle}>
+        <nav class="rail" aria-label="Application progress">
+            <p class="rail-title">Open a Premier account</p>
+            <p class="rail-sub">About 5 minutes. Your progress saves automatically.</p>
+            <ol class="vsteps">
+                <template for:each={steps} for:item="step">
+                    <li key={step.id} class={step.cssClass} aria-current={step.ariaCurrent}>
+                        <span class="vstep-dot" aria-hidden="true">{step.dot}</span>
+                        <span><span class="vstep-name">{step.name}</span>{step.summary}</span>
+                    </li>
+                </template>
+            </ol>
+        </nav>
 
-        <!-- Step content -->
-        <div class="step-content">
+        <section class="main" aria-live="polite">
 
             <!-- Step 1: Welcome -->
-            <template if:true={isStep1}>
-                <div class="step-panel">
-                    <div class="step-hero" style={heroBgStyle}>
-                        <h2>Welcome to {brandName}</h2>
-                        <p>Let's get you set up with a Premier account. This takes about 5 minutes.</p>
+            <template lwc:if={isStep1}>
+                <div class="panel welcome">
+                    <p class="eyebrow">{brandName}</p>
+                    <h2 class="view-title">Let's open your Premier account</h2>
+                    <p class="lede">It takes about 5 minutes. Have these ready before you start.</p>
+                    <ul class="checks checks--stack needs">
+                        <li>Government-issued photo ID</li>
+                        <li>Social Security number</li>
+                        <li>Your current address</li>
+                        <li>An opening deposit of at least $25</li>
+                    </ul>
+                </div>
+            </template>
+
+            <!-- Step 2: About you -->
+            <template lwc:if={isStep2}>
+                <div class="head">
+                    <h2 class="view-title">About you</h2>
+                    <p class="lede">Use your legal name as it appears on your ID.</p>
+                </div>
+                <div class="grid">
+                    <div class="field">
+                        <label for="firstName">First name</label>
+                        <input id="firstName" class="input" type="text" autocomplete="given-name" value={formData.firstName} data-field="firstName" onchange={handleInput}/>
                     </div>
-                    <div class="step-body">
-                        <h3>What you'll need</h3>
-                        <ul class="checklist">
-                            <li>✓ Government-issued photo ID</li>
-                            <li>✓ Social Security Number</li>
-                            <li>✓ Current address</li>
-                            <li>✓ Initial deposit (minimum $25)</li>
-                        </ul>
-                        <div class="step-actions">
-                            <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Get Started →</button>
-                        </div>
+                    <div class="field">
+                        <label for="lastName">Last name</label>
+                        <input id="lastName" class="input" type="text" autocomplete="family-name" value={formData.lastName} data-field="lastName" onchange={handleInput}/>
+                    </div>
+                    <div class="field">
+                        <label for="dob">Date of birth</label>
+                        <input id="dob" class="input" type="date" value={formData.dob} data-field="dob" onchange={handleInput}/>
+                    </div>
+                    <div class="field">
+                        <label for="ssn">Social Security number</label>
+                        <input id="ssn" class="input" type="password" inputmode="numeric" autocomplete="off" value={formData.ssn} data-field="ssn" onchange={handleInput}/>
+                        <p class="help">Used only to verify your identity.</p>
+                    </div>
+                    <div class="field full">
+                        <label for="email">Email</label>
+                        <input id="email" class="input" type="email" autocomplete="email" value={formData.email} data-field="email" onchange={handleInput}/>
+                    </div>
+                    <div class="field full">
+                        <label for="phone">Mobile phone</label>
+                        <input id="phone" class="input" type="tel" autocomplete="tel" value={formData.phone} data-field="phone" onchange={handleInput}/>
                     </div>
                 </div>
             </template>
 
-            <!-- Step 2: Personal Info -->
-            <template if:true={isStep2}>
-                <div class="step-panel">
-                    <h3 class="step-title" style={primaryTextStyle}>Personal Information</h3>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>First Name</label>
-                            <input type="text" placeholder="John" value={formData.firstName} data-field="firstName" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Last Name</label>
-                            <input type="text" placeholder="Smith" value={formData.lastName} data-field="lastName" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Date of Birth</label>
-                            <input type="date" value={formData.dob} data-field="dob" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Social Security Number</label>
-                            <input type="password" placeholder="XXX-XX-XXXX" value={formData.ssn} data-field="ssn" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field form-field--full">
-                            <label>Email Address</label>
-                            <input type="email" placeholder="john.smith@email.com" value={formData.email} data-field="email" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field form-field--full">
-                            <label>Phone Number</label>
-                            <input type="tel" placeholder="(555) 000-0000" value={formData.phone} data-field="phone" onchange={handleInput}/>
-                        </div>
+            <!-- Step 3: Address and ID -->
+            <template lwc:if={isStep3}>
+                <div class="head">
+                    <h2 class="view-title">Address and ID</h2>
+                    <p class="lede">We check this against your ID. P.O. boxes can't be used as a home address.</p>
+                </div>
+                <div class="grid">
+                    <div class="field full">
+                        <label for="street">Street address</label>
+                        <input id="street" class="input" type="text" autocomplete="street-address" value={formData.street} data-field="street" onchange={handleInput}/>
                     </div>
-                    <div class="step-actions">
-                        <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
+                    <div class="field">
+                        <label for="city">City</label>
+                        <input id="city" class="input" type="text" autocomplete="address-level2" value={formData.city} data-field="city" onchange={handleInput}/>
+                    </div>
+                    <div class="field">
+                        <label for="state">State</label>
+                        <select id="state" class="select" data-field="state" onchange={handleInput}>
+                            <option value="">Select a state</option>
+                            <option value="NC">North Carolina</option>
+                            <option value="NY">New York</option>
+                            <option value="CA">California</option>
+                            <option value="TX">Texas</option>
+                            <option value="FL">Florida</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="zip">ZIP code</label>
+                        <input id="zip" class="input" type="text" inputmode="numeric" autocomplete="postal-code" value={formData.zip} data-field="zip" onchange={handleInput}/>
+                    </div>
+                    <div class="field">
+                        <label for="idType">ID type</label>
+                        <select id="idType" class="select" data-field="idType" onchange={handleInput}>
+                            <option value="drivers_license">Driver's license</option>
+                            <option value="passport">Passport</option>
+                            <option value="state_id">State ID</option>
+                        </select>
+                    </div>
+                    <div class="field full">
+                        <label for="idNumber">ID number</label>
+                        <input id="idNumber" class="input" type="text" autocomplete="off" value={formData.idNumber} data-field="idNumber" onchange={handleInput}/>
                     </div>
                 </div>
             </template>
 
-            <!-- Step 3: Address -->
-            <template if:true={isStep3}>
-                <div class="step-panel">
-                    <h3 class="step-title" style={primaryTextStyle}>Address &amp; Identity</h3>
-                    <div class="form-grid">
-                        <div class="form-field form-field--full">
-                            <label>Street Address</label>
-                            <input type="text" placeholder="123 Main Street" value={formData.street} data-field="street" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>City</label>
-                            <input type="text" placeholder="Charlotte" value={formData.city} data-field="city" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>State</label>
-                            <select data-field="state" onchange={handleInput}>
-                                <option value="">Select state</option>
-                                <option value="NC">North Carolina</option>
-                                <option value="NY">New York</option>
-                                <option value="CA">California</option>
-                                <option value="TX">Texas</option>
-                                <option value="FL">Florida</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>ZIP Code</label>
-                            <input type="text" placeholder="28202" value={formData.zip} data-field="zip" onchange={handleInput}/>
-                        </div>
-                        <div class="form-field form-field--full">
-                            <label>ID Type</label>
-                            <select data-field="idType" onchange={handleInput}>
-                                <option value="drivers_license">Driver's License</option>
-                                <option value="passport">Passport</option>
-                                <option value="state_id">State ID</option>
-                            </select>
-                        </div>
-                        <div class="form-field form-field--full">
-                            <label>ID Number</label>
-                            <input type="text" placeholder="ID number" value={formData.idNumber} data-field="idNumber" onchange={handleInput}/>
-                        </div>
-                    </div>
-                    <div class="step-actions">
-                        <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                    </div>
+            <!-- Step 4: Account -->
+            <template lwc:if={isStep4}>
+                <div class="head">
+                    <h2 class="view-title">Choose your account</h2>
+                    <p class="lede">You can switch accounts within 30 days at no cost.</p>
                 </div>
-            </template>
-
-            <!-- Step 4: Account Selection -->
-            <template if:true={isStep4}>
-                <div class="step-panel">
-                    <h3 class="step-title" style={primaryTextStyle}>Choose Your Premier Account</h3>
-                    <div class="account-grid">
-                        <div class={premierPlusClass} onclick={selectPremierPlus} style={accountCardStyle}>
-                            <div class="account-badge" style={badgeStyle}>Most Popular</div>
-                            <h4>Premier Plus Checking</h4>
-                            <p>No monthly fee with $10,000 minimum balance. Unlimited transactions, free wire transfers, dedicated banker.</p>
-                            <ul class="feature-list">
+                <fieldset class="choices">
+                    <legend class="sr-only">Account type</legend>
+                    <label class={premierPlusClass}>
+                        <input type="radio" name="account" value="premierPlus" checked={premierPlusSelected} onchange={selectPremierPlus}/>
+                        <span>
+                            <span class="choice-head"><span class="choice-name">Premier Plus Checking</span><span class="chip">Most popular</span></span>
+                            <span class="choice-desc">No monthly fee with a $10,000 minimum balance. Unlimited transactions and a dedicated banker.</span>
+                            <ul class="checks feats">
                                 <li>Free domestic wires</li>
-                                <li>Priority customer service</li>
-                                <li>0.50% APY on savings link</li>
+                                <li>Priority service</li>
+                                <li>0.50% APY linked savings</li>
                             </ul>
-                        </div>
-                        <div class={premierClass} onclick={selectPremier} style={accountCardStyle}>
-                            <h4>Premier Checking</h4>
-                            <p>$25/month fee waived with $5,000 minimum balance. Great for everyday banking needs.</p>
-                            <ul class="feature-list">
+                        </span>
+                        <span class="price"><strong class="num">$0</strong><span>per month</span></span>
+                    </label>
+                    <label class={premierClass}>
+                        <input type="radio" name="account" value="premier" checked={premierSelected} onchange={selectPremier}/>
+                        <span>
+                            <span class="choice-name">Premier Checking</span>
+                            <span class="choice-desc">$25 monthly fee, waived with a $5,000 minimum balance.</span>
+                            <ul class="checks feats">
                                 <li>5 free ATM withdrawals</li>
                                 <li>Mobile check deposit</li>
                                 <li>Zelle® transfers</li>
                             </ul>
-                        </div>
-                    </div>
-                    <div class="deposit-field">
-                        <label>Initial Deposit Amount</label>
-                        <div class="input-prefix-wrap">
-                            <span class="input-prefix">$</span>
-                            <input type="number" placeholder="100.00" value={formData.initialDeposit} data-field="initialDeposit" onchange={handleInput}/>
-                        </div>
-                    </div>
-                    <div class="step-actions">
-                        <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                        <button class="btn-primary" style={primaryBtnStyle} onclick={nextStep}>Continue →</button>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Step 5: Review & Submit -->
-            <template if:true={isStep5}>
-                <div class="step-panel">
-                    <h3 class="step-title" style={primaryTextStyle}>Review &amp; Submit</h3>
-                    <div class="review-card">
-                        <div class="review-row"><span class="review-label">Name</span><span>{formData.firstName} {formData.lastName}</span></div>
-                        <div class="review-row"><span class="review-label">Email</span><span>{formData.email}</span></div>
-                        <div class="review-row"><span class="review-label">Phone</span><span>{formData.phone}</span></div>
-                        <div class="review-row"><span class="review-label">Address</span><span>{formData.street}, {formData.city}</span></div>
-                        <div class="review-row"><span class="review-label">Account Type</span><span style={primaryTextStyle}>{selectedAccountLabel}</span></div>
-                        <div class="review-row"><span class="review-label">Initial Deposit</span><span><strong>${formData.initialDeposit}</strong></span></div>
-                    </div>
-                    <div class="disclosure-box">
-                        <input type="checkbox" id="agree" checked={formData.agreed} data-field="agreed" onchange={handleCheck}/>
-                        <label for="agree">I agree to the <a href="#" style={primaryTextStyle}>Account Agreement</a>, <a href="#" style={primaryTextStyle}>Privacy Policy</a>, and <a href="#" style={primaryTextStyle}>Electronic Disclosure</a>.</label>
-                    </div>
-                    <template if:true={submitSuccess}>
-                        <div class="success-banner" style={successBannerStyle}>
-                            🎉 Application submitted! Your account number is <strong>{accountNumber}</strong>. Welcome to {brandName}!
-                        </div>
+                        </span>
+                        <span class="price"><strong class="num">$25</strong><span>per month</span></span>
+                    </label>
+                </fieldset>
+                <div class={depositFieldClass}>
+                    <label for="deposit">Opening deposit</label>
+                    <div class="affix"><span>$</span><input id="deposit" type="number" min="25" step="0.01" value={formData.initialDeposit} data-field="initialDeposit" onchange={handleInput}/></div>
+                    <template lwc:if={showDepositError}>
+                        <p class="error">Enter at least $25.00 to open this account.</p>
                     </template>
-                    <div class="step-actions">
-                        <button class="btn-secondary" onclick={prevStep}>← Back</button>
-                        <button class="btn-primary" style={primaryBtnStyle} onclick={handleSubmit} disabled={submitDisabled}>Submit Application</button>
-                    </div>
+                    <template lwc:else>
+                        <p class="help">Minimum $25.00.</p>
+                    </template>
                 </div>
             </template>
 
-        </div>
+            <!-- Step 5: Review -->
+            <template lwc:if={isStep5}>
+                <div class="head">
+                    <h2 class="view-title">Review and submit</h2>
+                    <p class="lede">Check your details. You can go back to change anything.</p>
+                </div>
+                <dl class="dl review card">
+                    <dt>Name</dt><dd>{fullName}</dd>
+                    <dt>Email</dt><dd>{emailText}</dd>
+                    <dt>Phone</dt><dd>{phoneText}</dd>
+                    <dt>Address</dt><dd>{addressText}</dd>
+                    <dt>Account</dt><dd>{selectedAccountLabel}</dd>
+                    <dt class="total">Opening deposit</dt><dd class="total">{depositAmount}</dd>
+                </dl>
+                <label class="agree">
+                    <input type="checkbox" checked={formData.agreed} onchange={handleCheck}/>
+                    <span>I agree to the <a href="#">Account Agreement</a>, <a href="#">Privacy Policy</a> and <a href="#">Electronic Disclosure</a>.</span>
+                </label>
+                <template lwc:if={submitSuccess}>
+                    <div class="notice notice--success" role="status">
+                        <strong>Your account is open.</strong> Account number <strong class="num">{accountNumber}</strong>. Welcome to {brandName}. <span class={accountLiveClass}>{accountLiveLabel}</span>
+                    </div>
+                </template>
+            </template>
+
+            <div class="actions">
+                <template lwc:if={showBack}>
+                    <button class="btn btn-ghost" onclick={prevStep}>Back</button>
+                </template>
+                <span class="spacer"></span>
+                <template lwc:if={isStep1}>
+                    <button class="btn btn-primary" onclick={nextStep}>Get started</button>
+                </template>
+                <template lwc:if={showContinue}>
+                    <button class="btn btn-primary" onclick={nextStep}>Continue</button>
+                </template>
+                <template lwc:if={isStep5}>
+                    <template lwc:if={showAgreeHint}>
+                        <span class="help">Agree to the terms to submit.</span>
+                    </template>
+                    <template lwc:if={showSubmit}>
+                        <button class="btn btn-primary" onclick={handleSubmit} disabled={submitDisabled}>Submit application</button>
+                    </template>
+                </template>
+            </div>
+        </section>
     </div>
 </template>

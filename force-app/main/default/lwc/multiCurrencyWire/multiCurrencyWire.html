@@ -1,151 +1,133 @@
 <template>
-    <div class="fx-wrap">
-        <div class="fx-header" style={headerStyle}>
-            <div class="fx-header-left">
-                <h2>🌍 Multi-Currency Wire</h2>
-                <p>Send payments in 40+ currencies · Live FX rates · SWIFT / Fedwire</p>
-            </div>
-            <div class="fx-rate-ticker">
-                <span class="ticker-label">Last updated:</span>
-                <span class="ticker-time">{lastUpdated}</span>
-                <button class="refresh-btn" onclick={refreshRates} title="Refresh rates">🔄</button>
-            </div>
+    <div class="bh fx" style={brandStyle}>
+        <div class="head">
+            <h2 class="view-title">Send an international wire</h2>
+            <p class="lede">From Business Checking ****4821. See the rate, fee and arrival time before you send.</p>
         </div>
 
-        <!-- FX Rate Board -->
-        <div class="rate-board">
-            <h4 class="rate-board-title">Live FX Rates vs USD</h4>
-            <div class="rate-grid">
-                <template for:each={fxRates} for:item="rate">
-                    <div key={rate.code} class={rate.cssClass} onclick={selectCurrency} data-code={rate.code}
-                         style={rate.selectedStyle}>
-                        <div class="rate-flag">{rate.flag}</div>
-                        <div class="rate-info">
-                            <div class="rate-code">{rate.code}</div>
-                            <div class="rate-name">{rate.name}</div>
-                        </div>
-                        <div class="rate-right">
-                            <div class="rate-value">{rate.rate}</div>
-                            <div class="rate-change" style={rate.changeStyle}>{rate.change}</div>
-                        </div>
+        <div class="layout">
+            <section class="card composer" aria-live="polite">
+                <div class="leg">
+                    <div class="field">
+                        <label for="send">You send</label>
+                        <div class="affix big"><span>$</span><input id="send" type="number" min="0" value={sendAmount} onchange={handleSendAmount}/></div>
                     </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Wire Composer -->
-        <div class="wire-composer">
-            <h4 class="composer-title" style={primaryTextStyle}>Send Wire</h4>
-
-            <div class="composer-grid">
-                <!-- Sender side -->
-                <div class="composer-side">
-                    <h5>You Send (USD)</h5>
-                    <div class="amount-row">
-                        <span class="currency-flag">🇺🇸</span>
-                        <span class="currency-code">USD</span>
-                        <div class="input-prefix-wrap">
-                            <span class="input-prefix">$</span>
-                            <input type="number" value={sendAmount} onchange={handleSendAmount} placeholder="10000"/>
-                        </div>
-                    </div>
-                    <div class="from-account">
-                        <label>From Account</label>
-                        <select data-field="fromAccount" onchange={handleWireInput}>
-                            <option value="checking_4821">Business Checking ****4821</option>
-                            <option value="checking_9034">Business Checking ****9034</option>
-                            <option value="money_market">Money Market ****2201</option>
+                    <div class="field">
+                        <label for="from">From account</label>
+                        <select id="from" class="select tall" data-field="fromAccount" onchange={handleWireInput}>
+                            <option value="checking_4821">Checking ****4821</option>
+                            <option value="checking_9034">Checking ****9034</option>
+                            <option value="money_market">Money market ****2201</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Arrow -->
-                <div class="composer-arrow" style={primaryTextStyle}>
-                    <div class="arrow-icon">→</div>
-                    <div class="fee-display">
-                        <div class="fee-row"><span>FX Rate:</span><span style={primaryTextStyle}><strong>1 USD = {selectedRate} {selectedCurrency}</strong></span></div>
-                        <div class="fee-row"><span>Wire Fee:</span><span>$25.00</span></div>
-                        <div class="fee-row"><span>Total:</span><strong>${totalDebitUsd}</strong></div>
-                    </div>
+                <div class="quote">
+                    <span>Rate <strong class="num">1 USD = {selectedRate} {selectedCurrency}</strong></span>
+                    <span class="quote-time">Updated {lastUpdated}</span>
                 </div>
 
-                <!-- Recipient side -->
-                <div class="composer-side">
-                    <h5>Recipient Gets ({selectedCurrency})</h5>
-                    <div class="amount-row">
-                        <span class="currency-flag">{selectedFlag}</span>
-                        <span class="currency-code">{selectedCurrency}</span>
-                        <div class="converted-amount" style={primaryTextStyle}>{convertedAmount}</div>
+                <div class="leg">
+                    <div class="field">
+                        <span class="label">Recipient gets</span>
+                        <div class="out num">{convertedAmount}</div>
                     </div>
-                    <div class="from-account">
-                        <label>Currency</label>
-                        <select onchange={handleCurrencySelect}>
+                    <div class="field">
+                        <label for="ccy">Currency</label>
+                        <select id="ccy" class="select tall" onchange={handleCurrencySelect}>
                             <template for:each={currencyOptions} for:item="opt">
-                                <option key={opt.code} value={opt.code} selected={opt.isSelected}>{opt.flag} {opt.code} — {opt.name}</option>
+                                <option key={opt.code} value={opt.code} selected={opt.isSelected}>{opt.label}</option>
                             </template>
                         </select>
                     </div>
                 </div>
-            </div>
 
-            <!-- Beneficiary Details -->
-            <div class="beneficiary-section">
-                <h5>Beneficiary Information</h5>
-                <div class="form-grid">
-                    <div class="form-field form-field--full">
-                        <label>Beneficiary Name</label>
-                        <input type="text" placeholder="Global Supplies Ltd." data-field="beneName" onchange={handleWireInput}/>
-                    </div>
-                    <div class="form-field form-field--full">
-                        <label>Beneficiary Address</label>
-                        <input type="text" placeholder="22 Finance Street, London, UK EC2V 8RF" data-field="beneAddress" onchange={handleWireInput}/>
-                    </div>
-                    <div class="form-field">
-                        <label>IBAN / Account Number</label>
-                        <input type="text" placeholder="GB29NWBK60161331926819" data-field="beneIban" onchange={handleWireInput}/>
-                    </div>
-                    <div class="form-field">
-                        <label>SWIFT / BIC Code</label>
-                        <input type="text" placeholder="NWBKGB2L" data-field="beneBic" onchange={handleWireInput}/>
-                    </div>
-                    <div class="form-field">
-                        <label>Beneficiary Bank</label>
-                        <input type="text" placeholder="NatWest Bank plc" data-field="beneBank" onchange={handleWireInput}/>
-                    </div>
-                    <div class="form-field">
-                        <label>Purpose of Payment</label>
-                        <select data-field="wireReason" onchange={handleWireInput}>
-                            <option value="goods">Payment for Goods</option>
-                            <option value="services">Payment for Services</option>
-                            <option value="investment">Investment / Capital</option>
-                            <option value="intercompany">Intercompany Transfer</option>
-                            <option value="loan_repayment">Loan Repayment</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-field form-field--full">
-                        <label>Remittance Information / Reference</label>
-                        <input type="text" placeholder="Invoice #INV-2026-0441" data-field="wireRef" onchange={handleWireInput}/>
+                <dl class="dl summary">
+                    <dt>Wire fee</dt><dd>{feeText}</dd>
+                    <dt>Arrives</dt><dd>{settlementTime}</dd>
+                    <dt class="total">Total debit</dt><dd class="total">{totalDebitUsd}</dd>
+                </dl>
+
+                <div class="config bene">
+                    <h3>Beneficiary</h3>
+                    <p class="help">Match the name and address on the beneficiary's bank account to avoid repairs.</p>
+                    <div class="grid">
+                        <div class="field full">
+                            <label for="beneName">Beneficiary name</label>
+                            <input id="beneName" class="input" type="text" data-field="beneName" onchange={handleWireInput}/>
+                        </div>
+                        <div class="field full">
+                            <label for="beneAddress">Beneficiary address</label>
+                            <input id="beneAddress" class="input" type="text" data-field="beneAddress" onchange={handleWireInput}/>
+                        </div>
+                        <div class="field">
+                            <label for="beneIban">IBAN or account number</label>
+                            <input id="beneIban" class="input" type="text" data-field="beneIban" onchange={handleWireInput}/>
+                        </div>
+                        <div class="field">
+                            <label for="beneBic">SWIFT BIC</label>
+                            <input id="beneBic" class="input" type="text" data-field="beneBic" onchange={handleWireInput}/>
+                        </div>
+                        <div class="field">
+                            <label for="beneBank">Beneficiary bank</label>
+                            <input id="beneBank" class="input" type="text" data-field="beneBank" onchange={handleWireInput}/>
+                        </div>
+                        <div class="field">
+                            <label for="reason">Purpose</label>
+                            <select id="reason" class="select" data-field="wireReason" onchange={handleWireInput}>
+                                <option value="goods">Payment for goods</option>
+                                <option value="services">Payment for services</option>
+                                <option value="investment">Investment or capital</option>
+                                <option value="intercompany">Intercompany transfer</option>
+                                <option value="loan_repayment">Loan repayment</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="field full">
+                            <label for="wireRef">Reference for the beneficiary</label>
+                            <input id="wireRef" class="input" type="text" data-field="wireRef" onchange={handleWireInput}/>
+                            <p class="help">For example an invoice number.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <template if:true={wireSubmitted}>
-                <div class="wire-confirm" style={confirmBannerStyle}>
-                    <div class="confirm-check">✅</div>
-                    <div>
-                        <p><strong>Wire Submitted</strong> — Reference: {wireConfirmRef}</p>
-                        <p>Sending <strong>${sendAmount} USD</strong> → <strong>{convertedAmount} {selectedCurrency}</strong> to {wireData.beneName}</p>
-                        <p class="confirm-note">Estimated settlement: {settlementTime}</p>
+                <template lwc:if={templateSaved}>
+                    <div class="notice result" role="status">Saved as a template. You'll find it under saved recipients.</div>
+                </template>
+                <template lwc:if={wireSubmitted}>
+                    <div class="notice notice--success result" role="status">
+                        <strong>Wire submitted.</strong> Reference <strong class="num">{wireConfirmRef}</strong>. Sending {sendAmountText} as {convertedAmount} to {beneficiaryName}. Arrives: {settlementTime}. <span class={wireLiveClass}>{wireLiveLabel}</span>
                     </div>
-                </div>
-            </template>
+                </template>
 
-            <div class="wire-actions">
-                <button class="btn-secondary" onclick={saveDraft}>Save as Template</button>
-                <button class="btn-primary" style={primaryBtnStyle} onclick={submitWire}>Send Wire →</button>
-            </div>
+                <div class="actions">
+                    <button class="btn btn-ghost" onclick={saveDraft}>Save as template</button>
+                    <span class="spacer"></span>
+                    <button class="btn btn-primary" onclick={submitWire}>Send wire</button>
+                </div>
+            </section>
+
+            <aside class="card rates">
+                <div class="rates-head">
+                    <h3 class="section-heading">Rates vs USD <span class={ratesLiveClass}>{ratesLiveLabel}</span></h3>
+                    <button class="btn btn-ghost refresh" onclick={refreshRates}>Refresh</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th scope="col">Currency</th><th scope="col">Rate</th><th scope="col">Today</th></tr></thead>
+                        <tbody>
+                            <template for:each={fxRates} for:item="r">
+                                <tr key={r.code} class={r.rowClass} aria-selected={r.ariaSelected} data-code={r.code} onclick={selectCurrency}>
+                                    <td><span class="code">{r.code}</span><span class="name">{r.name}</span></td>
+                                    <td class="num">{r.rateText}</td>
+                                    <td class={r.changeClass}><span aria-hidden="true">{r.change}</span><span class="sr-only">{r.changeLabel}</span></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="help foot">Indicative rates as of {lastUpdated}. Select a row or use the currency list.</p>
+            </aside>
         </div>
-
     </div>
 </template>

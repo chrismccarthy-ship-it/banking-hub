@@ -1,34 +1,42 @@
 import { LightningElement, api, track } from 'lwc';
+import { brandStyle } from 'c/bankingTheme';
+import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
-// Simulated base FX rates vs USD (as of typical mid-market)
+// Simulated mid-market rates vs USD for the demo; production quotes come from the bank's FX engine.
 const BASE_RATES = {
-    EUR: { name: 'Euro', flag: '🇪🇺', base: 0.9215 },
-    GBP: { name: 'British Pound', flag: '🇬🇧', base: 0.7848 },
-    JPY: { name: 'Japanese Yen', flag: '🇯🇵', base: 149.82 },
-    CAD: { name: 'Canadian Dollar', flag: '🇨🇦', base: 1.3654 },
-    AUD: { name: 'Australian Dollar', flag: '🇦🇺', base: 1.5321 },
-    CHF: { name: 'Swiss Franc', flag: '🇨🇭', base: 0.8923 },
-    CNY: { name: 'Chinese Yuan', flag: '🇨🇳', base: 7.2341 },
-    MXN: { name: 'Mexican Peso', flag: '🇲🇽', base: 17.1823 },
-    INR: { name: 'Indian Rupee', flag: '🇮🇳', base: 83.42 },
-    BRL: { name: 'Brazilian Real', flag: '🇧🇷', base: 4.9721 },
-    SGD: { name: 'Singapore Dollar', flag: '🇸🇬', base: 1.3421 },
-    HKD: { name: 'Hong Kong Dollar', flag: '🇭🇰', base: 7.8201 },
-    SEK: { name: 'Swedish Krona', flag: '🇸🇪', base: 10.4231 },
-    NOK: { name: 'Norwegian Krone', flag: '🇳🇴', base: 10.6821 },
-    DKK: { name: 'Danish Krone', flag: '🇩🇰', base: 6.8821 },
-    NZD: { name: 'New Zealand Dollar', flag: '🇳🇿', base: 1.6321 },
-    AED: { name: 'UAE Dirham', flag: '🇦🇪', base: 3.6725 },
-    SAR: { name: 'Saudi Riyal', flag: '🇸🇦', base: 3.7500 },
-    ZAR: { name: 'South African Rand', flag: '🇿🇦', base: 18.7421 },
-    PLN: { name: 'Polish Zloty', flag: '🇵🇱', base: 4.0221 }
+    EUR: { name: 'Euro', base: 0.9215 },
+    GBP: { name: 'British Pound', base: 0.7848 },
+    JPY: { name: 'Japanese Yen', base: 149.82 },
+    CAD: { name: 'Canadian Dollar', base: 1.3654 },
+    AUD: { name: 'Australian Dollar', base: 1.5321 },
+    CHF: { name: 'Swiss Franc', base: 0.8923 },
+    CNY: { name: 'Chinese Yuan', base: 7.2341 },
+    MXN: { name: 'Mexican Peso', base: 17.1823 },
+    INR: { name: 'Indian Rupee', base: 83.42 },
+    BRL: { name: 'Brazilian Real', base: 4.9721 },
+    SGD: { name: 'Singapore Dollar', base: 1.3421 },
+    HKD: { name: 'Hong Kong Dollar', base: 7.8201 },
+    SEK: { name: 'Swedish Krona', base: 10.4231 },
+    NOK: { name: 'Norwegian Krone', base: 10.6821 },
+    DKK: { name: 'Danish Krone', base: 6.8821 },
+    NZD: { name: 'New Zealand Dollar', base: 1.6321 },
+    AED: { name: 'UAE Dirham', base: 3.6725 },
+    SAR: { name: 'Saudi Riyal', base: 3.7500 },
+    ZAR: { name: 'South African Rand', base: 18.7421 },
+    PLN: { name: 'Polish Zloty', base: 4.0221 }
 };
 
+
+const WIRE_FEE = 25;
+const SWIFT_CURRENCIES = ['JPY', 'CNY', 'INR', 'AED', 'SAR', 'ZAR'];
+
 function simRate(base) {
-    // Simulate small tick movement ±0.3%
+    // Simulated tick within plus or minus 0.3% of the base rate
     const change = 1 + (Math.random() - 0.5) * 0.006;
     return parseFloat((base * change).toFixed(4));
 }
+
+const money = (n, currency) => n.toLocaleString('en-US', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default class MultiCurrencyWire extends LightningElement {
     @api brand = {};
@@ -36,102 +44,97 @@ export default class MultiCurrencyWire extends LightningElement {
     @track sendAmount = 10000;
     @track wireSubmitted = false;
     @track wireConfirmRef = '';
+    @track templateSaved = false;
     @track lastUpdated = '';
     @track wireData = {};
-
     @track currentRates = {};
+    @track ratesLive;   // undefined until the first call resolves
+    @track wireLive;
 
     connectedCallback() {
         this.refreshRates();
     }
 
-    refreshRates() {
-        const now = new Date();
-        this.lastUpdated = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    get brandStyle() { return brandStyle(this.brand); }
 
-        const newRates = {};
+    async refreshRates() {
+        this.lastUpdated = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        const next = {};
         Object.entries(BASE_RATES).forEach(([code, info]) => {
-            const prev = this.currentRates[code]?.rate;
-            const newRate = simRate(info.base);
-            const diff = prev ? newRate - prev : 0;
-            newRates[code] = {
-                code,
-                name: info.name,
-                flag: info.flag,
-                rate: newRate,
-                change: diff >= 0 ? `▲ ${Math.abs(diff).toFixed(4)}` : `▼ ${Math.abs(diff).toFixed(4)}`,
-                changeStyle: diff >= 0 ? 'color:#2e7d32' : 'color:#c62828',
-                selected: code === this.selectedCurrency,
-                cssClass: `rate-card ${code === this.selectedCurrency ? 'rate-card--selected' : ''}`,
-                selectedStyle: code === this.selectedCurrency ? `border-color:${this.brand.primaryColor}; background:${this.brand.primaryLight || '#f8f6ff'};` : ''
-            };
+            next[code] = { code, name: info.name, rate: simRate(info.base), base: info.base };
         });
-        this.currentRates = newRates;
+        this.currentRates = next;
+
+        // Live rates from the FX engine override the simulated tick for any currency it returns.
+        const live = await callApi('fxRates');
+        this.ratesLive = live;
+        if (live && Array.isArray(live.data.rates)) {
+            const merged = { ...this.currentRates };
+            live.data.rates.forEach(r => {
+                if (merged[r.code]) merged[r.code] = { ...merged[r.code], rate: Number(r.rate) };
+            });
+            this.currentRates = merged;
+        }
     }
 
+    get ratesLiveLabel() { return liveLabel(this.ratesLive); }
+    get ratesLiveClass() { return liveClass(this.ratesLive); }
+    get wireLiveLabel() { return liveLabel(this.wireLive); }
+    get wireLiveClass() { return liveClass(this.wireLive); }
+
+    // ── Rates table ──
     get fxRates() {
-        return Object.values(this.currentRates);
+        return Object.values(this.currentRates).map(r => {
+            const pct = ((r.rate - r.base) / r.base) * 100;
+            const up = pct >= 0;
+            const selected = r.code === this.selectedCurrency;
+            return {
+                ...r,
+                rateText: r.rate.toFixed(4),
+                change: `${up ? '\u25B2' : '\u25BC'} ${Math.abs(pct).toFixed(2)}%`,
+                changeLabel: `${up ? 'up' : 'down'} ${Math.abs(pct).toFixed(2)} percent`,
+                changeClass: up ? 'chg chg--up' : 'chg chg--down',
+                rowClass: selected ? 'rate rate--on' : 'rate',
+                ariaSelected: selected ? 'true' : 'false'
+            };
+        });
     }
 
     get currencyOptions() {
         return Object.entries(BASE_RATES).map(([code, info]) => ({
-            code, name: info.name, flag: info.flag,
-            isSelected: code === this.selectedCurrency
+            code, label: `${code} (${info.name})`, isSelected: code === this.selectedCurrency
         }));
     }
 
-    get selectedRateObj() {
-        return this.currentRates[this.selectedCurrency];
-    }
-
-    get selectedRate() {
-        return this.selectedRateObj?.rate?.toFixed(4) || '--';
-    }
-
-    get selectedFlag() {
-        return BASE_RATES[this.selectedCurrency]?.flag || '🌍';
-    }
+    // ── Composer ──
+    get selectedRateObj() { return this.currentRates[this.selectedCurrency]; }
+    get selectedRate() { return this.selectedRateObj ? this.selectedRateObj.rate.toFixed(4) : '--'; }
+    get amount() { return parseFloat(this.sendAmount) || 0; }
 
     get convertedAmount() {
-        const rate = this.selectedRateObj?.rate;
-        if (!rate || !this.sendAmount) return '--';
-        return (parseFloat(this.sendAmount) * rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const r = this.selectedRateObj;
+        if (!r || !this.amount) return '--';
+        return money(this.amount * r.rate, this.selectedCurrency);
     }
 
-    get totalDebitUsd() {
-        return (parseFloat(this.sendAmount) + 25).toLocaleString('en-US', { minimumFractionDigits: 2 });
-    }
+    get feeText() { return money(WIRE_FEE, 'USD'); }
+    get totalDebitUsd() { return money(this.amount + WIRE_FEE, 'USD'); }
+    get sendAmountText() { return money(this.amount, 'USD'); }
 
     get settlementTime() {
-        const intl = ['JPY','CNY','INR','AED','SAR','ZAR'];
-        return intl.includes(this.selectedCurrency)
-            ? '1–2 business days (SWIFT)'
-            : 'Same business day if submitted before 4:00 PM ET';
+        return SWIFT_CURRENCIES.includes(this.selectedCurrency)
+            ? '1 to 2 business days through SWIFT'
+            : 'Today, if sent before 4:00 PM ET';
     }
 
-    get headerStyle() { return `background:${this.brand.primaryColor};`; }
-    get primaryTextStyle() { return `color:${this.brand.primaryColor};`; }
-    get primaryBtnStyle() { return `background:${this.brand.primaryColor}; border-radius:${this.brand.buttonRadius || '6px'};`; }
-    get confirmBannerStyle() { return `background:${this.brand.primaryLight}; border-left:4px solid ${this.brand.primaryColor};`; }
+    get beneficiaryName() { return this.wireData.beneName || 'the beneficiary'; }
 
     selectCurrency(event) {
         this.selectedCurrency = event.currentTarget.dataset.code;
-        this.currentRates = Object.fromEntries(
-            Object.entries(this.currentRates).map(([code, r]) => [
-                code,
-                {
-                    ...r,
-                    selected: code === this.selectedCurrency,
-                    cssClass: `rate-card ${code === this.selectedCurrency ? 'rate-card--selected' : ''}`,
-                    selectedStyle: code === this.selectedCurrency ? `border-color:${this.brand.primaryColor}; background:${this.brand.primaryLight || '#f8f6ff'};` : ''
-                }
-            ])
-        );
     }
 
     handleCurrencySelect(event) {
         this.selectedCurrency = event.target.value;
-        this.selectCurrency({ currentTarget: { dataset: { code: event.target.value } } });
     }
 
     handleSendAmount(event) {
@@ -142,10 +145,22 @@ export default class MultiCurrencyWire extends LightningElement {
         this.wireData = { ...this.wireData, [event.target.dataset.field]: event.target.value };
     }
 
-    saveDraft() { alert('Wire template saved.'); }
+    saveDraft() { this.templateSaved = true; }
 
-    submitWire() {
-        this.wireConfirmRef = 'WR-' + Math.floor(1000000 + Math.random() * 9000000);
+    async submitWire() {
+        const live = await callApi('sendWire', {
+            fromAccount: this.wireData.fromAccount || 'checking_4821',
+            sell: { currency: 'USD', amount: this.amount },
+            buy: { currency: this.selectedCurrency, rate: this.selectedRateObj ? this.selectedRateObj.rate : null },
+            beneficiary: {
+                name: this.wireData.beneName, address: this.wireData.beneAddress,
+                iban: this.wireData.beneIban, bic: this.wireData.beneBic, bank: this.wireData.beneBank
+            },
+            purpose: this.wireData.wireReason || 'goods',
+            reference: this.wireData.wireRef
+        });
+        this.wireLive = live;
+        this.wireConfirmRef = (live && live.data.reference) || 'WR-' + Math.floor(1000000 + Math.random() * 9000000);
         this.wireSubmitted = true;
     }
 }

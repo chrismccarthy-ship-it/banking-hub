@@ -1,291 +1,275 @@
 <template>
-    <div class="pcs-wrap">
-        <h3 class="pcs-title" style={primaryTextStyle}>Payment Channel Configuration</h3>
-        <p class="pcs-sub">Configure your payment infrastructure. Select a channel to set up.</p>
-
-        <!-- Channel tabs -->
-        <div class="channel-tabs">
-            <button class={sftpTabClass} data-channel="sftp" onclick={selectChannel} style={sftpTabStyle}>
-                <span>📬</span> SFTP / Lockbox
-            </button>
-            <button class={achTabClass} data-channel="ach" onclick={selectChannel} style={achTabStyle}>
-                <span>🔄</span> ACH / Nacha
-            </button>
-            <button class={wireTabClass} data-channel="wire" onclick={selectChannel} style={wireTabStyle}>
-                <span>🏦</span> Wire Transfer
-            </button>
+    <div class="bh pcs" style={brandStyle}>
+        <div class="head">
+            <h2 class="view-title">Payment channels</h2>
+            <p class="lede">Set up how your business sends and receives money. Changes go to the bank's treasury team for provisioning.</p>
         </div>
 
-        <!-- ── SFTP / LOCKBOX ── -->
-        <template if:true={showSftp}>
-            <div class="channel-panel">
-                <div class="channel-badge" style={badgeStyle}>SFTP + Lockbox</div>
-                <h4 class="channel-title">Lockbox &amp; SFTP File Delivery</h4>
-                <p class="channel-desc">Receive payments via physical check lockbox or electronic file delivery via SFTP. Files delivered in BAI2, ANSI X12 820, or custom delimited format.</p>
-
-                <div class="config-section">
-                    <h5>SFTP Connection Details</h5>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>SFTP Host</label>
-                            <input type="text" placeholder="sftp.yourbank.com" data-field="sftpHost" onchange={handleSftpInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Port</label>
-                            <input type="number" placeholder="22" value="22" data-field="sftpPort" onchange={handleSftpInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Username</label>
-                            <input type="text" placeholder="acme_corp_sftp" data-field="sftpUser" onchange={handleSftpInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Authentication</label>
-                            <select data-field="sftpAuth" onchange={handleSftpInput}>
-                                <option value="ssh_key">SSH Key (recommended)</option>
-                                <option value="password">Password</option>
-                            </select>
-                        </div>
-                        <div class="form-field form-field--full">
-                            <label>Remote Directory Path</label>
-                            <input type="text" placeholder="/incoming/payments/" data-field="sftpPath" onchange={handleSftpInput}/>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="config-section">
-                    <h5>File Format &amp; Schedule</h5>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>File Format</label>
-                            <select data-field="fileFormat" onchange={handleSftpInput}>
-                                <option value="bai2">BAI2</option>
-                                <option value="x12_820">ANSI X12 820</option>
-                                <option value="csv">Delimited (CSV/TXT)</option>
-                                <option value="ach">ACH/Nacha Flat File</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>Delivery Frequency</label>
-                            <select data-field="sftpFrequency" onchange={handleSftpInput}>
-                                <option value="realtime">Real-time (as received)</option>
-                                <option value="same_day">Same Day</option>
-                                <option value="next_day">Next Business Day</option>
-                                <option value="custom">Custom Schedule</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="config-section">
-                    <h5>Lockbox Settings</h5>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>Lockbox Number</label>
-                            <input type="text" placeholder="LB-004821" data-field="lockboxNumber" onchange={handleSftpInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Remittance Processing</label>
-                            <select data-field="remittance" onchange={handleSftpInput}>
-                                <option value="standard">Standard (check + coupon)</option>
-                                <option value="wholesale">Wholesale (invoice matching)</option>
-                                <option value="image">Image Only</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>Notify on Receipt</label>
-                            <input type="email" placeholder="ar@yourcompany.com" data-field="sftpNotifyEmail" onchange={handleSftpInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>PGP Encryption</label>
-                            <select data-field="pgp" onchange={handleSftpInput}>
-                                <option value="yes">Yes — encrypt all files</option>
-                                <option value="no">No</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <template if:true={sftpSaved}>
-                    <div class="save-confirm" style={confirmStyle}>✅ SFTP / Lockbox configuration saved. Provisioning ticket: <strong>{sftpTicket}</strong></div>
+        <div class="layout">
+            <nav class="channels" aria-label="Channels">
+                <template for:each={channels} for:item="c">
+                    <button key={c.id} class={c.cssClass} data-channel={c.id} aria-current={c.ariaCurrent} onclick={selectChannel}>
+                        <span class="ch-name">{c.label}</span>
+                        <span class={c.statusClass}>{c.status}</span>
+                    </button>
                 </template>
-                <div class="channel-actions">
-                    <button class="btn-test" onclick={testSftp}>🔌 Test Connection</button>
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={saveSftp}>Save Configuration</button>
-                </div>
-            </div>
-        </template>
+            </nav>
 
-        <!-- ── ACH / NACHA ── -->
-        <template if:true={showAch}>
-            <div class="channel-panel">
-                <div class="channel-badge" style={badgeStyle}>ACH / Nacha</div>
-                <h4 class="channel-title">ACH Payment Configuration</h4>
-                <p class="channel-desc">Configure Automated Clearing House (ACH) origination and receipt per Nacha Operating Rules. Supports PPD, CCD, CTX, WEB, and TEL entries.</p>
+            <section aria-live="polite">
 
-                <div class="config-section">
-                    <h5>Company Information (Nacha Header)</h5>
-                    <div class="form-grid">
-                        <div class="form-field form-field--full">
-                            <label>Company Name (max 16 chars)</label>
-                            <input type="text" placeholder="ACME CORP" maxlength="16" data-field="achCompanyName" onchange={handleAchInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Company ID (10-digit)</label>
-                            <input type="text" placeholder="1234567890" maxlength="10" data-field="achCompanyId" onchange={handleAchInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Standard Entry Class</label>
-                            <select data-field="secCode" onchange={handleAchInput}>
-                                <option value="CCD">CCD — Corporate Credit/Debit</option>
-                                <option value="CTX">CTX — Corporate Trade Exchange</option>
-                                <option value="PPD">PPD — Prearranged Payment &amp; Deposit</option>
-                                <option value="WEB">WEB — Internet-Initiated</option>
-                                <option value="TEL">TEL — Telephone-Initiated</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>Effective Entry Class</label>
-                            <select data-field="achEffectiveDate" onchange={handleAchInput}>
-                                <option value="same_day">Same Day ACH</option>
-                                <option value="next_day">Next Business Day</option>
-                                <option value="2_day">2-Day Standard</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="config-section">
-                    <h5>Origination Limits</h5>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>Daily Debit Limit</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="500000" data-field="debitLimit" onchange={handleAchInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Daily Credit Limit</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="500000" data-field="creditLimit" onchange={handleAchInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Single Transaction Limit</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="100000" data-field="txnLimit" onchange={handleAchInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Return Rate Threshold</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">%</span>
-                            <input type="number" placeholder="0.5" step="0.1" data-field="returnRate" onchange={handleAchInput}/></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="config-section">
-                    <h5>File Transmission</h5>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>Transmission Method</label>
-                            <select data-field="achTransmission" onchange={handleAchInput}>
-                                <option value="sftp">SFTP File Upload</option>
-                                <option value="api">API (Nacha-compliant JSON)</option>
-                                <option value="web_portal">Bank Web Portal</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>Prenote Required</label>
-                            <select data-field="prenote" onchange={handleAchInput}>
-                                <option value="yes">Yes (recommended)</option>
-                                <option value="no">No</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <template if:true={achSaved}>
-                    <div class="save-confirm" style={confirmStyle}>✅ ACH configuration saved. ODFI approval pending. Ticket: <strong>{achTicket}</strong></div>
-                </template>
-                <div class="channel-actions">
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={saveAch}>Save ACH Configuration</button>
-                </div>
-            </div>
-        </template>
-
-        <!-- ── WIRE TRANSFER ── -->
-        <template if:true={showWire}>
-            <div class="channel-panel">
-                <div class="channel-badge" style={badgeStyle}>Wire Transfer</div>
-                <h4 class="channel-title">Domestic &amp; International Wire Configuration</h4>
-                <p class="channel-desc">Configure wire transfer permissions, limits, and authorized users. Domestic wires settle via Fedwire or CHIPS. International wires use SWIFT.</p>
-
-                <div class="config-section">
-                    <h5>Wire Permissions</h5>
-                    <div class="wire-perm-grid">
-                        <template for:each={wirePermissions} for:item="perm">
-                            <div key={perm.id} class="wire-perm-row">
-                                <div>
-                                    <p class="perm-name">{perm.name}</p>
-                                    <p class="perm-desc">{perm.desc}</p>
-                                </div>
-                                <div class="toggle-wrap">
-                                    <input type="checkbox" id={perm.id} checked={perm.enabled} data-id={perm.id} onchange={togglePerm} class="toggle-input"/>
-                                    <label for={perm.id} class="toggle-label" style={perm.toggleStyle}></label>
-                                </div>
+                <!-- Lockbox and SFTP -->
+                <template lwc:if={showSftp}>
+                    <div class="config">
+                        <h3>SFTP connection</h3>
+                        <p class="help">Receivables are delivered to your server as files. Use an SSH key where you can.</p>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="sftpHost">Host</label>
+                                <input id="sftpHost" class="input" type="text" data-field="sftpHost" onchange={handleSftpInput}/>
                             </div>
-                        </template>
-                    </div>
-                </div>
-
-                <div class="config-section">
-                    <h5>Dual Control &amp; Limits</h5>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>Single Wire Limit</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="1000000" data-field="wireLimit" onchange={handleWireInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Daily Wire Limit</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="5000000" data-field="wireDailyLimit" onchange={handleWireInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Dual Control Threshold</label>
-                            <div class="input-prefix-wrap"><span class="input-prefix">$</span>
-                            <input type="number" placeholder="50000" data-field="dualControlThreshold" onchange={handleWireInput}/></div>
-                        </div>
-                        <div class="form-field">
-                            <label>Approval Required</label>
-                            <select data-field="approvalType" onchange={handleWireInput}>
-                                <option value="single">Single approver</option>
-                                <option value="dual">Dual approval</option>
-                                <option value="threshold">Threshold-based</option>
-                            </select>
+                            <div class="field">
+                                <label for="sftpPort">Port</label>
+                                <input id="sftpPort" class="input" type="number" value="22" data-field="sftpPort" onchange={handleSftpInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="sftpUser">Username</label>
+                                <input id="sftpUser" class="input" type="text" data-field="sftpUser" onchange={handleSftpInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="sftpAuth">Authentication</label>
+                                <select id="sftpAuth" class="select" data-field="sftpAuth" onchange={handleSftpInput}>
+                                    <option value="ssh_key">SSH key (recommended)</option>
+                                    <option value="password">Password</option>
+                                </select>
+                            </div>
+                            <div class="field full">
+                                <label for="sftpPath">Remote folder</label>
+                                <input id="sftpPath" class="input" type="text" data-field="sftpPath" onchange={handleSftpInput}/>
+                                <p class="help">For example /incoming/payments/</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="config-section">
-                    <h5>SWIFT / International</h5>
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label>SWIFT BIC</label>
-                            <input type="text" placeholder="TRUIST2C" data-field="swiftBic" onchange={handleWireInput}/>
-                        </div>
-                        <div class="form-field">
-                            <label>Correspondent Bank</label>
-                            <input type="text" placeholder="JPMorgan Chase" data-field="correspondentBank" onchange={handleWireInput}/>
+                    <div class="config">
+                        <h3>File format and schedule</h3>
+                        <p class="help">Pick the format your ERP or AR system already reads.</p>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="fileFormat">File format</label>
+                                <select id="fileFormat" class="select" data-field="fileFormat" onchange={handleSftpInput}>
+                                    <option value="bai2">BAI2</option>
+                                    <option value="x12_820">ANSI X12 820</option>
+                                    <option value="csv">Delimited (CSV or TXT)</option>
+                                    <option value="ach">ACH (Nacha) flat file</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="sftpFrequency">Delivery</label>
+                                <select id="sftpFrequency" class="select" data-field="sftpFrequency" onchange={handleSftpInput}>
+                                    <option value="realtime">As received</option>
+                                    <option value="same_day">Same day</option>
+                                    <option value="next_day">Next business day</option>
+                                    <option value="custom">Custom schedule</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <template if:true={wireSaved}>
-                    <div class="save-confirm" style={confirmStyle}>✅ Wire configuration saved. Ticket: <strong>{wireTicket}</strong></div>
+                    <div class="config">
+                        <h3>Lockbox</h3>
+                        <p class="help">How mailed checks are processed before they reach your file.</p>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="lockboxNumber">Lockbox number</label>
+                                <input id="lockboxNumber" class="input" type="text" data-field="lockboxNumber" onchange={handleSftpInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="remittance">Remittance processing</label>
+                                <select id="remittance" class="select" data-field="remittance" onchange={handleSftpInput}>
+                                    <option value="standard">Standard (check and coupon)</option>
+                                    <option value="wholesale">Wholesale (invoice matching)</option>
+                                    <option value="image">Image only</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="notify">Email on receipt</label>
+                                <input id="notify" class="input" type="email" data-field="sftpNotifyEmail" onchange={handleSftpInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="pgp">PGP encryption</label>
+                                <select id="pgp" class="select" data-field="pgp" onchange={handleSftpInput}>
+                                    <option value="yes">Encrypt all files</option>
+                                    <option value="no">No encryption</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <template lwc:if={sftpTested}>
+                        <div class="notice result" role="status">{sftpTestText} <span class={sftpLiveClass}>{sftpLiveLabel}</span></div>
+                    </template>
+                    <template lwc:if={sftpSaved}>
+                        <div class="notice notice--success result" role="status"><strong>Lockbox and SFTP saved.</strong> Provisioning ticket <strong class="num">{sftpTicket}</strong>.</div>
+                    </template>
+                    <div class="actions">
+                        <button class="btn btn-secondary" onclick={testSftp}>Test connection</button>
+                        <span class="spacer"></span>
+                        <button class="btn btn-primary" onclick={saveSftp}>Save SFTP settings</button>
+                    </div>
                 </template>
-                <div class="channel-actions">
-                    <button class="btn-primary" style={primaryBtnStyle} onclick={saveWire}>Save Wire Configuration</button>
-                </div>
-            </div>
-        </template>
 
+                <!-- ACH origination -->
+                <template lwc:if={showAch}>
+                    <div class="config">
+                        <h3>Company information</h3>
+                        <p class="help">Appears in the Nacha file header and on your recipients' statements.</p>
+                        <div class="grid">
+                            <div class="field full">
+                                <label for="achName">Company name</label>
+                                <input id="achName" class="input" type="text" maxlength="16" data-field="achCompanyName" onchange={handleAchInput}/>
+                                <p class="help">Up to 16 characters.</p>
+                            </div>
+                            <div class="field">
+                                <label for="achId">Company ID</label>
+                                <input id="achId" class="input" type="text" inputmode="numeric" maxlength="10" data-field="achCompanyId" onchange={handleAchInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="secCode">Entry class</label>
+                                <select id="secCode" class="select" data-field="secCode" onchange={handleAchInput}>
+                                    <option value="CCD">CCD: corporate credit or debit</option>
+                                    <option value="CTX">CTX: corporate trade exchange</option>
+                                    <option value="PPD">PPD: prearranged payment and deposit</option>
+                                    <option value="WEB">WEB: internet-initiated</option>
+                                    <option value="TEL">TEL: telephone-initiated</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="achTiming">Settlement</label>
+                                <select id="achTiming" class="select" data-field="achEffectiveDate" onchange={handleAchInput}>
+                                    <option value="same_day">Same-day ACH</option>
+                                    <option value="next_day">Next business day</option>
+                                    <option value="2_day">2-day standard</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="config">
+                        <h3>Origination limits</h3>
+                        <p class="help">Files over a limit are held for review.</p>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="debitLimit">Daily debit limit</label>
+                                <div class="affix"><span>$</span><input id="debitLimit" type="number" data-field="debitLimit" onchange={handleAchInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="creditLimit">Daily credit limit</label>
+                                <div class="affix"><span>$</span><input id="creditLimit" type="number" data-field="creditLimit" onchange={handleAchInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="txnLimit">Single transaction limit</label>
+                                <div class="affix"><span>$</span><input id="txnLimit" type="number" data-field="txnLimit" onchange={handleAchInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="returnRate">Return-rate threshold</label>
+                                <div class="affix"><input id="returnRate" type="number" step="0.1" data-field="returnRate" onchange={handleAchInput}/><span class="suffix">%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="config">
+                        <h3>File transmission</h3>
+                        <p class="help">How your ACH files reach the bank.</p>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="achTx">Method</label>
+                                <select id="achTx" class="select" data-field="achTransmission" onchange={handleAchInput}>
+                                    <option value="sftp">SFTP file upload</option>
+                                    <option value="api">API (Nacha-compliant JSON)</option>
+                                    <option value="web_portal">Bank web portal</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="prenote">Prenote</label>
+                                <select id="prenote" class="select" data-field="prenote" onchange={handleAchInput}>
+                                    <option value="yes">Required (recommended)</option>
+                                    <option value="no">Not required</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <template lwc:if={achSaved}>
+                        <div class="notice notice--success result" role="status"><strong>ACH settings saved.</strong> Waiting on ODFI approval. Ticket <strong class="num">{achTicket}</strong>.</div>
+                    </template>
+                    <div class="actions">
+                        <span class="spacer"></span>
+                        <button class="btn btn-primary" onclick={saveAch}>Save ACH settings</button>
+                    </div>
+                </template>
+
+                <!-- Wire transfers -->
+                <template lwc:if={showWire}>
+                    <div class="config">
+                        <h3>Permissions</h3>
+                        <p class="help">Domestic wires settle through Fedwire or CHIPS. International wires use SWIFT.</p>
+                        <ul class="list perms">
+                            <template for:each={permissionRows} for:item="perm">
+                                <li key={perm.id} class="perm">
+                                    <span><span class="choice-name">{perm.name}</span><span class="choice-desc">{perm.desc}</span></span>
+                                    <label class={perm.switchClass}>
+                                        <input type="checkbox" role="switch" data-id={perm.id} checked={perm.enabled} onchange={togglePerm}/>
+                                        <span class="switch-track" aria-hidden="true"></span>
+                                        <span>{perm.stateLabel}</span>
+                                        <span class="sr-only">{perm.name}</span>
+                                    </label>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                    <div class="config">
+                        <h3>Limits and approvals</h3>
+                        <p class="help">Wires above the approval threshold need a second user.</p>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="wireLimit">Per-wire limit</label>
+                                <div class="affix"><span>$</span><input id="wireLimit" type="number" data-field="wireLimit" onchange={handleWireInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="wireDaily">Daily limit</label>
+                                <div class="affix"><span>$</span><input id="wireDaily" type="number" data-field="wireDailyLimit" onchange={handleWireInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="dual">Second approval above</label>
+                                <div class="affix"><span>$</span><input id="dual" type="number" data-field="dualControlThreshold" onchange={handleWireInput}/></div>
+                            </div>
+                            <div class="field">
+                                <label for="approval">Approval rule</label>
+                                <select id="approval" class="select" data-field="approvalType" onchange={handleWireInput}>
+                                    <option value="threshold">Second approver above the threshold</option>
+                                    <option value="dual">Second approver on every wire</option>
+                                    <option value="single">Single approver</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="config">
+                        <h3>International details</h3>
+                        <p class="help">Only needed when international wires are on.</p>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="swiftBic">Your SWIFT BIC</label>
+                                <input id="swiftBic" class="input" type="text" data-field="swiftBic" onchange={handleWireInput}/>
+                            </div>
+                            <div class="field">
+                                <label for="corr">Correspondent bank</label>
+                                <input id="corr" class="input" type="text" data-field="correspondentBank" onchange={handleWireInput}/>
+                            </div>
+                        </div>
+                    </div>
+                    <template lwc:if={wireSaved}>
+                        <div class="notice notice--success result" role="status"><strong>Wire settings saved.</strong> Ticket <strong class="num">{wireTicket}</strong>. <span class={wireLiveClass}>{wireLiveLabel}</span></div>
+                    </template>
+                    <div class="actions">
+                        <span class="spacer"></span>
+                        <button class="btn btn-primary" onclick={saveWire}>Save wire settings</button>
+                    </div>
+                </template>
+            </section>
+        </div>
     </div>
 </template>

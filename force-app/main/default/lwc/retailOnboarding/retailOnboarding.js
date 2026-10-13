@@ -1,14 +1,32 @@
 import { LightningElement, api, track } from 'lwc';
+import { brandStyle } from 'c/bankingTheme';
+import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
-const STEP_LABELS = ['Welcome', 'Personal Info', 'Address & ID', 'Account', 'Review'];
+const STEPS = [
+    { id: 1, name: 'Welcome', hint: "What you'll need" },
+    { id: 2, name: 'About you', hint: 'Name and contact' },
+    { id: 3, name: 'Address and ID', hint: 'Where you live' },
+    { id: 4, name: 'Account', hint: 'Choose and fund' },
+    { id: 5, name: 'Review', hint: 'Agree and submit' }
+];
+
+const ACCOUNTS = {
+    premierPlus: { label: 'Premier Plus Checking' },
+    premier: { label: 'Premier Checking' }
+};
+
+const MIN_DEPOSIT = 25;
 
 export default class RetailOnboarding extends LightningElement {
     @api brand = {};
+    @api recordId;
 
     @track currentStep = 1;
     @track selectedAccount = 'premierPlus';
     @track submitSuccess = false;
     @track accountNumber = '';
+    @track accountLive;
+    @track depositTouched = false;
 
     @track formData = {
         firstName: '', lastName: '', dob: '', ssn: '', email: '', phone: '',
@@ -16,68 +34,112 @@ export default class RetailOnboarding extends LightningElement {
         initialDeposit: '100', agreed: false
     };
 
+    get brandStyle() { return brandStyle(this.brand); }
+    get brandName() { return (this.brand && this.brand.label) || 'your bank'; }
+
+    // ── Progress rail ──
     get steps() {
-        return STEP_LABELS.map((label, i) => {
-            const num = i + 1;
-            const isActive = num === this.currentStep;
-            const isDone = num < this.currentStep;
+        return STEPS.map(s => {
+            const done = s.id < this.currentStep;
+            const current = s.id === this.currentStep;
             return {
-                id: num,
-                num: isDone ? '✓' : String(num),
-                label,
-                cssClass: `step-indicator ${isActive ? 'step-indicator--active' : ''} ${isDone ? 'step-indicator--done' : ''}`,
-                activeStyle: isActive ? `color:${this.brand.primaryColor}` : isDone ? `color:${this.brand.primaryColor}; opacity:0.7` : '',
-                circleStyle: (isActive || isDone) ? `background:${this.brand.primaryColor}; color:#fff;` : ''
+                ...s,
+                summary: done ? this.summaryFor(s.id) : s.hint,
+                cssClass: `vstep ${done ? 'vstep--done' : current ? 'vstep--current' : 'vstep--upcoming'}`,
+                dot: done ? '' : String(s.id),
+                ariaCurrent: current ? 'step' : null
             };
         });
     }
 
-    get progressFillStyle() {
-        const pct = ((this.currentStep - 1) / (STEP_LABELS.length - 1)) * 100;
-        return `width:${pct}%; background:${this.brand.primaryColor};`;
+    summaryFor(id) {
+        const f = this.formData;
+        if (id === 1) return 'Ready to start';
+        if (id === 2) return `${f.firstName} ${f.lastName}`.trim() || 'Details added';
+        if (id === 3) return f.city ? `${f.city}${f.state ? ', ' + f.state : ''}` : 'Address added';
+        if (id === 4) return ACCOUNTS[this.selectedAccount].label;
+        return '';
     }
 
-    get submitDisabled() { return !this.formData.agreed; }
     get isStep1() { return this.currentStep === 1; }
     get isStep2() { return this.currentStep === 2; }
     get isStep3() { return this.currentStep === 3; }
     get isStep4() { return this.currentStep === 4; }
     get isStep5() { return this.currentStep === 5; }
+    get showBack() { return this.currentStep > 1 && !this.submitSuccess; }
+    get showContinue() { return this.currentStep > 1 && this.currentStep < STEPS.length; }
+    get showSubmit() { return !this.submitSuccess; }
+    get showAgreeHint() { return !this.formData.agreed && !this.submitSuccess; }
 
-    get brandName() { return this.brand.logoMark || 'Your Bank'; }
-    get heroBgStyle() { return `background:${this.brand.primaryColor};`; }
-    get primaryBtnStyle() { return `background:${this.brand.primaryColor}; border-radius:${this.brand.buttonRadius};`; }
-    get primaryTextStyle() { return `color:${this.brand.primaryColor};`; }
-    get badgeStyle() { return `background:${this.brand.primaryColor}; color:#fff;`; }
-    get accountCardStyle() { return `border:2px solid ${this.brand.primaryLight};`; }
-    get successBannerStyle() { return `background:${this.brand.primaryLight}; border-left:4px solid ${this.brand.primaryColor};`; }
+    // ── Account choice ──
+    get premierPlusSelected() { return this.selectedAccount === 'premierPlus'; }
+    get premierSelected() { return this.selectedAccount === 'premier'; }
+    get premierPlusClass() { return `choice ${this.premierPlusSelected ? 'choice--on' : ''}`; }
+    get premierClass() { return `choice ${this.premierSelected ? 'choice--on' : ''}`; }
+    get selectedAccountLabel() { return ACCOUNTS[this.selectedAccount].label; }
 
-    get premierPlusClass() { return `account-tile ${this.selectedAccount === 'premierPlus' ? 'account-tile--selected' : ''}`; }
-    get premierClass() { return `account-tile ${this.selectedAccount === 'premier' ? 'account-tile--selected' : ''}`; }
-    get selectedAccountLabel() { return this.selectedAccount === 'premierPlus' ? 'Premier Plus Checking' : 'Premier Checking'; }
+    selectPremierPlus() { this.selectedAccount = 'premierPlus'; }
+    selectPremier() { this.selectedAccount = 'premier'; }
+
+    // ── Deposit validation ──
+    get depositValid() { return Number(this.formData.initialDeposit) >= MIN_DEPOSIT; }
+    get showDepositError() { return this.depositTouched && !this.depositValid; }
+    get depositFieldClass() { return `field deposit ${this.showDepositError ? 'field--error' : ''}`; }
+    get depositAmount() {
+        const n = Number(this.formData.initialDeposit) || 0;
+        return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
+
+    // ── Review ──
+    get fullName() { return `${this.formData.firstName} ${this.formData.lastName}`.trim() || 'Not provided'; }
+    get emailText() { return this.formData.email || 'Not provided'; }
+    get phoneText() { return this.formData.phone || 'Not provided'; }
+    get addressText() {
+        const f = this.formData;
+        const parts = [f.street, f.city, f.state].filter(Boolean);
+        return parts.length ? parts.join(', ') : 'Not provided';
+    }
+    get submitDisabled() { return !this.formData.agreed || this.submitSuccess; }
 
     handleInput(event) {
         const field = event.target.dataset.field;
         this.formData = { ...this.formData, [field]: event.target.value };
+        if (field === 'initialDeposit') this.depositTouched = true;
     }
 
     handleCheck(event) {
         this.formData = { ...this.formData, agreed: event.target.checked };
     }
 
-    selectPremierPlus() { this.selectedAccount = 'premierPlus'; }
-    selectPremier() { this.selectedAccount = 'premier'; }
-
     nextStep() {
-        if (this.currentStep < STEP_LABELS.length) this.currentStep++;
+        if (this.currentStep === 4 && !this.depositValid) {
+            this.depositTouched = true;
+            return;
+        }
+        if (this.currentStep < STEPS.length) this.currentStep++;
     }
 
     prevStep() {
         if (this.currentStep > 1) this.currentStep--;
     }
 
-    handleSubmit() {
-        this.accountNumber = '****' + Math.floor(1000 + Math.random() * 9000);
+    // Core account-open call. Identity fields (SSN, DOB) never leave the page in the demo.
+    async handleSubmit() {
+        const f = this.formData;
+        const live = await callApi('openAccount', {
+            applicant: { firstName: f.firstName, lastName: f.lastName, email: f.email, phone: f.phone },
+            product: this.selectedAccount,
+            address: { line1: f.street, city: f.city, state: f.state, postalCode: f.zip },
+            openingDeposit: { amount: Number(f.initialDeposit) || 0, currency: 'USD', source: 'external_transfer' },
+            paperlessStatements: true,
+            debitCard: true
+        });
+        this.accountLive = live;
+        const masked = live && live.data.account && live.data.account.maskedNumber;
+        this.accountNumber = masked || '****' + Math.floor(1000 + Math.random() * 9000);
         this.submitSuccess = true;
     }
+
+    get accountLiveLabel() { return liveLabel(this.accountLive); }
+    get accountLiveClass() { return liveClass(this.accountLive); }
 }

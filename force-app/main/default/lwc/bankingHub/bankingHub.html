@@ -1,190 +1,212 @@
 <template>
-    <div class="banking-hub" style={hubStyle}>
+    <div class="hub" style={brandVars}>
 
-        <!-- Brand Header -->
-        <div class="hub-header" style={headerStyle}>
-            <div class="hub-logo">
-                <!-- Static resource logo if configured, otherwise text fallback -->
-                <template if:true={hasLogoUrl}>
-                    <img src={logoUrl} alt={brand.logoMark} class="hub-logo-img" />
+        <!-- Brand header -->
+        <header class="hub-header">
+            <div class="logo">
+                <template lwc:if={hasLogoUrl}>
+                    <img src={logoUrl} alt={brand.logoMark} class="logo-img" style={logoImgStyle} />
                 </template>
-                <template if:false={hasLogoUrl}>
-                    <div class="logo-mark" style={logoMarkStyle}>{brand.logoText}</div>
-                    <span class="logo-name" style={logoNameStyle}>{brand.logoMark}</span>
+                <template lwc:else>
+                    <span class="logo-mark" aria-hidden="true">{brand.logoText}</span>
+                    <span class="logo-name">{brand.logoMark}</span>
                 </template>
             </div>
-            <div class="hub-header-nav">
-                <span>Personal</span>
-                <span>Business</span>
-                <span>Wealth</span>
-            </div>
-            <div class="hub-header-actions">
-                <select class="brand-switcher" onchange={handleBrandChange} title="Switch bank brand">
-                    <template for:each={brandOptions} for:item="opt">
-                        <option key={opt.id} value={opt.id} selected={opt.isSelected}>{opt.label}</option>
-                    </template>
-                    <template if:true={customBrandLabel}>
-                        <option value="custom">{customBrandLabel}</option>
-                    </template>
-                </select>
-                <button class="hub-signin-btn" style={primaryBtnStyle}>Sign In</button>
-            </div>
-        </div>
+            <nav class="topnav" aria-label="Primary">
+                <button class="topnav-item" aria-current={retailNavCurrent} onclick={setRetailMode}>Personal</button>
+                <button class="topnav-item" aria-current={commercialNavCurrent} onclick={setCommercialMode}>Business</button>
+            </nav>
+            <template lwc:if={hasInitials}>
+                <span class="avatar" title={firstName}>{initials}</span>
+            </template>
+        </header>
 
-        <!-- Mode Toggle -->
-        <div class="mode-toggle-bar">
-            <button class={retailModeClass} onclick={setRetailMode} style={retailTabStyle}>Personal Banking</button>
-            <button class={commercialModeClass} onclick={setCommercialMode} style={commercialTabStyle}>Commercial Banking</button>
-        </div>
-
-        <!-- ═══ RETAIL MODE ═══ -->
-        <template if:true={isRetailMode}>
-
-            <!-- Credit Score Gauge Banner -->
-            <div class="score-banner" style={lightBgStyle}>
-                <div class="score-banner-left">
-                    <h3 class="score-banner-title">Your Credit Profile</h3>
-                    <p class="score-banner-sub">Based on your Equifax FICO® Score</p>
-                </div>
-                <c-banking-credit-gauge
-                    credit-score={creditScore}
-                    brand-color={brand.gaugeColor}
-                    contact-id={recordId}
-                ></c-banking-credit-gauge>
-            </div>
-
-            <!-- Nav - evenly spread, no scroll -->
-            <div class="nav-section">
-                <h2 class="nav-title">What can we help you with?</h2>
-                <div class="nav-spread">
-                    <template for:each={visibleRetailNavItems} for:item="item">
-                        <button
-                            key={item.id}
-                            class={item.cssClass}
-                            data-id={item.id}
-                            onclick={handleNavClick}
-                            style={item.activeInlineStyle}
-                        >
-                            <span class="nav-icon">{item.emoji}</span>
-                            <span class="nav-label">{item.label}</span>
-                        </button>
-                    </template>
+        <main class="hub-main">
+            <div class="greet">
+                <h1 class="greet-title">{greeting}</h1>
+                <div class="seg" role="group" aria-label="Banking type">
+                    <button class="seg-btn" aria-pressed={retailPressed} onclick={setRetailMode}>Personal</button>
+                    <button class="seg-btn" aria-pressed={commercialPressed} onclick={setCommercialMode}>Commercial</button>
                 </div>
             </div>
 
-            <hr class="hub-divider" style={dividerStyle} />
-
-            <!-- Retail Content Panels -->
-            <div class="content-area">
-                <template if:true={showRetailOnboarding}>
-                    <c-retail-onboarding brand={brand} record-id={recordId}></c-retail-onboarding>
-                </template>
-
-                <template if:true={showLoanApplication}>
-                    <c-loan-application brand={brand} loan-type={selectedLoanType}></c-loan-application>
-                </template>
-
-                <template if:true={showCreditCard}>
-                    <div class="card-panel">
-                        <h3 style={primaryTextStyle}>Credit Card Offerings</h3>
-                        <p class="panel-sub">Select a card to learn more or apply.</p>
-                        <div class="card-grid">
-                            <!-- Premium Rewards Card -->
-                            <div class="product-card" style={productCardStyle}>
-                                <div class="product-card-header" style={primaryBgStyle}>
-                                    <span class="product-badge">3x · 2x · 1x</span>
-                                </div>
-                                <div class="product-card-body">
-                                    <h4>Premium Rewards</h4>
-                                    <p>3x points on travel, 2x dining, 1x everything else. $95 annual fee. 30,000 bonus points.</p>
-                                    <button class="product-btn" style={primaryBtnStyle} onclick={navigatePremiumCard}>Apply Now</button>
-                                </div>
-                            </div>
-                            <!-- Cash Rewards Card -->
-                            <div class="product-card" style={productCardStyle}>
-                                <div class="product-card-header" style={accentBgStyle}>
-                                    <span class="product-badge">Cash Back</span>
-                                </div>
-                                <div class="product-card-body">
-                                    <h4>Cash Rewards</h4>
-                                    <p>3% on gas, 2% on groceries, 1.5% on everything. $0 annual fee. 0% intro APR 12 months.</p>
-                                    <button class="product-btn" style={primaryBtnStyle} onclick={navigateCashCard}>Apply Now</button>
-                                </div>
-                            </div>
+            <!-- ═══ PERSONAL ═══ -->
+            <template lwc:if={isRetailMode}>
+                <div class="top">
+                    <section aria-labelledby="retail-tasks-title">
+                        <h2 class="section-heading" id="retail-tasks-title">What would you like to do?</h2>
+                        <div class="tasks">
+                            <template for:each={retailTasks} for:item="task">
+                                <button key={task.id} class={task.cssClass} data-id={task.id} aria-current={task.ariaCurrent} onclick={handleRetailTask}>
+                                    <span class="task-text">
+                                        <span class="task-label">{task.label}</span>
+                                        <span class="task-desc">{task.description}</span>
+                                    </span>
+                                    <span class="chevron" aria-hidden="true"></span>
+                                </button>
+                            </template>
                         </div>
+                    </section>
+
+                    <aside class="card score" aria-label={scoreAriaLabel}>
+                        <p class="eyebrow">FICO Score 8 · Equifax</p>
+                        <div class="score-row">
+                            <span class="score-num">{creditScore}</span>
+                            <span class={tierClass}>{tierLabel}</span>
+                        </div>
+                        <div class="scale" aria-hidden="true">
+                            <template for:each={scaleSegments} for:item="seg">
+                                <i key={seg.key} class={seg.cssClass} style={seg.style}></i>
+                            </template>
+                            <span class="marker" style={markerStyle}></span>
+                        </div>
+                        <div class="scale-ends" aria-hidden="true"><span>300</span><span>850</span></div>
+                        <p class="score-meta">Checking your score here never lowers it. <span class={creditLiveClass}>{creditLiveLabel}</span></p>
+                    </aside>
+                </div>
+
+                <section class="content" aria-live="polite">
+                    <template lwc:if={showCreditCard}>
+                        <div class="content-head">
+                            <h2 class="view-title">Credit cards for you</h2>
+                            <p class="lede">Based on a soft check. Applying won't affect your score until you accept an offer.</p>
+                        </div>
+                        <div class="offers">
+                            <article class="card offer offer--best">
+                                <div class="offer-top">
+                                    <div>
+                                        <h3 class="offer-name">Premium Rewards</h3>
+                                        <p class="offer-fee">$95 annual fee</p>
+                                    </div>
+                                    <span class="chip">Best match</span>
+                                </div>
+                                <div class="rates">
+                                    <div><strong>3x</strong><span>Travel</span></div>
+                                    <div><strong>2x</strong><span>Dining</span></div>
+                                    <div><strong>1x</strong><span>Everything else</span></div>
+                                </div>
+                                <ul class="perks">
+                                    <li>30,000 bonus points after $3,000 in 90 days</li>
+                                    <li>No foreign transaction fees</li>
+                                </ul>
+                                <button class="btn btn-primary" onclick={navigatePremiumCard}>Apply now</button>
+                            </article>
+                            <article class="card offer">
+                                <div class="offer-top">
+                                    <div>
+                                        <h3 class="offer-name">Cash Rewards</h3>
+                                        <p class="offer-fee">$0 annual fee</p>
+                                    </div>
+                                </div>
+                                <div class="rates">
+                                    <div><strong>3%</strong><span>Gas</span></div>
+                                    <div><strong>2%</strong><span>Groceries</span></div>
+                                    <div><strong>1.5%</strong><span>Everything else</span></div>
+                                </div>
+                                <ul class="perks">
+                                    <li>0% intro APR for 12 months on purchases</li>
+                                    <li>Cash back never expires</li>
+                                </ul>
+                                <button class="btn btn-secondary" onclick={navigateCashCard}>View details</button>
+                            </article>
+                        </div>
+                    </template>
+
+                    <template lwc:if={showLoanMenu}>
+                        <div class="content-head">
+                            <h2 class="view-title">Which loan are you looking for?</h2>
+                            <p class="lede">Check your rate in about 5 minutes. It won't affect your credit score.</p>
+                        </div>
+                        <div class="choices">
+                            <template for:each={loans} for:item="loan">
+                                <button key={loan.id} class="choice" data-id={loan.id} onclick={selectLoan}>
+                                    <span class="task-text">
+                                        <span class="task-label">{loan.label}</span>
+                                        <span class="task-desc">{loan.description}</span>
+                                    </span>
+                                    <span class="choice-rate"><strong>{loan.rate}</strong><span>APR from</span></span>
+                                    <span class="chevron" aria-hidden="true"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template lwc:if={showLoanApplication}>
+                        <button class="btn btn-ghost back" onclick={backToLoans}>All loans</button>
+                        <c-loan-application brand={brand} loan-type={selectedLoanType}></c-loan-application>
+                    </template>
+
+                    <template lwc:if={showRetailOnboarding}>
+                        <c-retail-onboarding brand={brand} record-id={recordId}></c-retail-onboarding>
+                    </template>
+
+                    <template lwc:if={showPlaceholder}>
+                        <div class="empty">
+                            <h2 class="section-heading">{activeRetailLabel} isn't in this demo yet</h2>
+                            <p class="lede">Credit cards, loans and account opening are fully built. Pick one of those to continue.</p>
+                            <template lwc:if={hasBuiltRetailTask}>
+                                <button class="btn btn-secondary" onclick={showBuiltTask}>{builtRetailLabel}</button>
+                            </template>
+                        </div>
+                    </template>
+                </section>
+            </template>
+
+            <!-- ═══ COMMERCIAL ═══ -->
+            <template lwc:if={isCommercialMode}>
+                <section aria-labelledby="commercial-tasks-title">
+                    <h2 class="section-heading" id="commercial-tasks-title">Business banking</h2>
+                    <div class="tasks tasks--wide">
+                        <template for:each={commercialTasks} for:item="task">
+                            <button key={task.id} class={task.cssClass} data-id={task.id} aria-current={task.ariaCurrent} onclick={handleCommercialTask}>
+                                <span class="task-text">
+                                    <span class="task-label">{task.label}</span>
+                                    <span class="task-desc">{task.description}</span>
+                                </span>
+                                <span class="chevron" aria-hidden="true"></span>
+                            </button>
+                        </template>
+                    </div>
+                </section>
+
+                <section class="content" aria-live="polite">
+                    <template lwc:if={showCommercialOnboarding}>
+                        <c-commercial-onboarding brand={brand}></c-commercial-onboarding>
+                    </template>
+                    <template lwc:if={showPaymentChannels}>
+                        <c-payment-channel-setup brand={brand}></c-payment-channel-setup>
+                    </template>
+                    <template lwc:if={showMultiCurrency}>
+                        <c-multi-currency-wire brand={brand}></c-multi-currency-wire>
+                    </template>
+                    <template lwc:if={showCommercialPlaceholder}>
+                        <div class="empty">
+                            <h2 class="section-heading">{activeCommercialLabel} isn't in this demo yet</h2>
+                            <p class="lede">Business onboarding, payment channels and international wires are fully built.</p>
+                            <button class="btn btn-secondary" onclick={showBusinessOnboarding}>Open a business account</button>
+                        </div>
+                    </template>
+                </section>
+            </template>
+        </main>
+
+        <!-- Demo settings: presenter only. Rendered when showDemoControls is on; Ctrl+Shift+B hides or shows it. -->
+        <template lwc:if={showDemoButton}>
+            <div class="demo" onkeydown={handleDemoPanelKeydown}>
+                <template lwc:if={demoPanelOpen}>
+                    <div class="demo-panel" role="dialog" aria-label="Demo settings">
+                        <label class="demo-label" for="demo-brand">Brand</label>
+                        <select id="demo-brand" class="demo-select" onchange={handleBrandChange}>
+                            <template for:each={brandOptions} for:item="opt">
+                                <option key={opt.id} value={opt.id} selected={opt.isSelected}>{opt.label}</option>
+                            </template>
+                        </select>
+                        <p class="demo-hint">Ctrl+Shift+B hides this button.</p>
+                        <button class="btn btn-ghost demo-done" onclick={closeDemoPanel}>Done</button>
                     </div>
                 </template>
-
-                <template if:true={showLoanMenu}>
-                    <div class="loan-menu">
-                        <h3 style={primaryTextStyle}>Select a Loan Type</h3>
-                        <div class="loan-grid">
-                            <button class="loan-tile" onclick={selectAutoLoan} style={loanTileStyle}>
-                                <span class="loan-icon">🚗</span>
-                                <span class="loan-tile-label">Auto Loan</span>
-                                <span class="loan-tile-rate" style={primaryTextStyle}>from 5.49% APR</span>
-                            </button>
-                            <button class="loan-tile" onclick={selectHomeLoan} style={loanTileStyle}>
-                                <span class="loan-icon">🏠</span>
-                                <span class="loan-tile-label">Home Loan</span>
-                                <span class="loan-tile-rate" style={primaryTextStyle}>from 6.75% APR</span>
-                            </button>
-                            <button class="loan-tile" onclick={selectPersonalLoan} style={loanTileStyle}>
-                                <span class="loan-icon">💵</span>
-                                <span class="loan-tile-label">Personal Loan</span>
-                                <span class="loan-tile-rate" style={primaryTextStyle}>from 8.99% APR</span>
-                            </button>
-                        </div>
-                    </div>
-                </template>
-
-                <template if:true={showPlaceholder}>
-                    <div class="placeholder">Select a category above to get started.</div>
-                </template>
+                <button class="demo-toggle" aria-label="Demo settings" title="Demo settings" aria-expanded={demoPanelOpen} onclick={toggleDemoPanel}></button>
             </div>
         </template>
-
-        <!-- ═══ COMMERCIAL MODE ═══ -->
-        <template if:true={isCommercialMode}>
-            <div class="commercial-banner" style={primaryBgStyle}>
-                <h2 class="commercial-banner-title">Commercial Banking</h2>
-                <p class="commercial-banner-sub">Enterprise-grade solutions for your business</p>
-            </div>
-
-            <div class="nav-section">
-                <div class="nav-spread">
-                    <template for:each={commercialNavItems} for:item="item">
-                        <button
-                            key={item.id}
-                            class={item.cssClass}
-                            data-id={item.id}
-                            onclick={handleCommercialNavClick}
-                            style={item.activeInlineStyle}
-                        >
-                            <span class="nav-icon">{item.emoji}</span>
-                            <span class="nav-label">{item.label}</span>
-                        </button>
-                    </template>
-                </div>
-            </div>
-
-            <hr class="hub-divider" style={dividerStyle} />
-
-            <div class="content-area">
-                <template if:true={showCommercialOnboarding}>
-                    <c-commercial-onboarding brand={brand}></c-commercial-onboarding>
-                </template>
-                <template if:true={showPaymentChannels}>
-                    <c-payment-channel-setup brand={brand}></c-payment-channel-setup>
-                </template>
-                <template if:true={showMultiCurrency}>
-                    <c-multi-currency-wire brand={brand}></c-multi-currency-wire>
-                </template>
-                <template if:true={showCommercialPlaceholder}>
-                    <div class="placeholder">Select a service above to get started.</div>
-                </template>
-            </div>
-        </template>
-
     </div>
 </template>
