@@ -103,7 +103,7 @@
                         </div>
                     </div>
                     <template lwc:if={sftpTested}>
-                        <div class="notice result" role="status">Connection test queued. Treasury support will confirm the host and credentials.</div>
+                        <div class="notice result" role="status">{sftpTestText} <span class={sftpLiveClass}>{sftpLiveLabel}</span></div>
                     </template>
                     <template lwc:if={sftpSaved}>
                         <div class="notice notice--success result" role="status"><strong>Lockbox and SFTP saved.</strong> Provisioning ticket <strong class="num">{sftpTicket}</strong>.</div>
@@ -262,7 +262,7 @@
                         </div>
                     </div>
                     <template lwc:if={wireSaved}>
-                        <div class="notice notice--success result" role="status"><strong>Wire settings saved.</strong> Ticket <strong class="num">{wireTicket}</strong>.</div>
+                        <div class="notice notice--success result" role="status"><strong>Wire settings saved.</strong> Ticket <strong class="num">{wireTicket}</strong>. <span class={wireLiveClass}>{wireLiveLabel}</span></div>
                     </template>
                     <div class="actions">
                         <span class="spacer"></span>

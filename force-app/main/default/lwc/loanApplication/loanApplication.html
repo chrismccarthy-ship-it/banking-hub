@@ -175,7 +175,7 @@
                     </dl>
                     <template lwc:if={loanApproved}>
                         <div class="notice notice--success" role="status">
-                            <strong>You're pre-qualified.</strong> Reference <strong class="num">{loanRef}</strong>. A banker will contact you within 1 business day.
+                            <strong>You're pre-qualified.</strong> Reference <strong class="num">{loanRef}</strong>. A banker will contact you within 1 business day. <span class={loanLiveClass}>{loanLiveLabel}</span>
                         </div>
                     </template>
                 </template>

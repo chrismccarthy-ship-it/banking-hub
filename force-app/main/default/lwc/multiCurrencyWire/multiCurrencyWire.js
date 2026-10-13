@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import { brandStyle } from 'c/bankingTheme';
+import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
 // Simulated mid-market rates vs USD for the demo; production quotes come from the bank's FX engine.
 const BASE_RATES = {
@@ -47,6 +48,8 @@ export default class MultiCurrencyWire extends LightningElement {
     @track lastUpdated = '';
     @track wireData = {};
     @track currentRates = {};
+    @track ratesLive;   // undefined until the first call resolves
+    @track wireLive;
 
     connectedCallback() {
         this.refreshRates();
@@ -54,14 +57,30 @@ export default class MultiCurrencyWire extends LightningElement {
 
     get brandStyle() { return brandStyle(this.brand); }
 
-    refreshRates() {
+    async refreshRates() {
         this.lastUpdated = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
         const next = {};
         Object.entries(BASE_RATES).forEach(([code, info]) => {
             next[code] = { code, name: info.name, rate: simRate(info.base), base: info.base };
         });
         this.currentRates = next;
+
+        // Live rates from the FX engine override the simulated tick for any currency it returns.
+        const live = await callApi('fxRates');
+        this.ratesLive = live;
+        if (live && Array.isArray(live.data.rates)) {
+            const merged = { ...this.currentRates };
+            live.data.rates.forEach(r => {
+                if (merged[r.code]) merged[r.code] = { ...merged[r.code], rate: Number(r.rate) };
+            });
+            this.currentRates = merged;
+        }
     }
+
+    get ratesLiveLabel() { return liveLabel(this.ratesLive); }
+    get ratesLiveClass() { return liveClass(this.ratesLive); }
+    get wireLiveLabel() { return liveLabel(this.wireLive); }
+    get wireLiveClass() { return liveClass(this.wireLive); }
 
     // ── Rates table ──
     get fxRates() {
@@ -128,8 +147,20 @@ export default class MultiCurrencyWire extends LightningElement {
 
     saveDraft() { this.templateSaved = true; }
 
-    submitWire() {
-        this.wireConfirmRef = 'WR-' + Math.floor(1000000 + Math.random() * 9000000);
+    async submitWire() {
+        const live = await callApi('sendWire', {
+            fromAccount: this.wireData.fromAccount || 'checking_4821',
+            sell: { currency: 'USD', amount: this.amount },
+            buy: { currency: this.selectedCurrency, rate: this.selectedRateObj ? this.selectedRateObj.rate : null },
+            beneficiary: {
+                name: this.wireData.beneName, address: this.wireData.beneAddress,
+                iban: this.wireData.beneIban, bic: this.wireData.beneBic, bank: this.wireData.beneBank
+            },
+            purpose: this.wireData.wireReason || 'goods',
+            reference: this.wireData.wireRef
+        });
+        this.wireLive = live;
+        this.wireConfirmRef = (live && live.data.reference) || 'WR-' + Math.floor(1000000 + Math.random() * 9000000);
         this.wireSubmitted = true;
     }
 }

@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import { brandStyle } from 'c/bankingTheme';
+import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
 const CHANNELS = [
     { id: 'sftp', label: 'Lockbox and SFTP' },
@@ -20,6 +21,8 @@ export default class PaymentChannelSetup extends LightningElement {
     @track sftpData = {};
     @track achData = {};
     @track wireData = {};
+    @track sftpLive;
+    @track wireLive;
 
     @track wirePermissions = [
         { id: 'domestic_outgoing', name: 'Send domestic wires', desc: 'USD to US banks through Fedwire or CHIPS', enabled: true },
@@ -77,7 +80,22 @@ export default class PaymentChannelSetup extends LightningElement {
     handleAchInput(event) { this.achData = { ...this.achData, [event.target.dataset.field]: event.target.value }; }
     handleWireInput(event) { this.wireData = { ...this.wireData, [event.target.dataset.field]: event.target.value }; }
 
-    testSftp() { this.sftpTested = true; }
+    async testSftp() {
+        const d = this.sftpData;
+        this.sftpLive = await callApi('testSftp', { host: d.sftpHost, port: Number(d.sftpPort) || 22, username: d.sftpUser, auth: d.sftpAuth || 'ssh_key', remotePath: d.sftpPath });
+        this.sftpTested = true;
+    }
+
+    get sftpTestText() {
+        const r = this.sftpLive && this.sftpLive.data;
+        return r && r.result === 'connected'
+            ? `Connected in ${r.handshakeMs} ms. Write test ${r.writeTest === 'pass' ? 'passed' : 'failed'}.`
+            : 'Connection test queued. Treasury support will confirm the host and credentials.';
+    }
+    get sftpLiveLabel() { return liveLabel(this.sftpLive); }
+    get sftpLiveClass() { return liveClass(this.sftpLive); }
+    get wireLiveLabel() { return liveLabel(this.wireLive); }
+    get wireLiveClass() { return liveClass(this.wireLive); }
 
     saveSftp() {
         this.sftpTicket = 'SFTP-' + Math.floor(10000 + Math.random() * 90000);
@@ -89,8 +107,18 @@ export default class PaymentChannelSetup extends LightningElement {
         this.achSaved = true;
     }
 
-    saveWire() {
-        this.wireTicket = 'WIRE-' + Math.floor(10000 + Math.random() * 90000);
+    async saveWire() {
+        const permissions = {};
+        this.wirePermissions.forEach(p => { permissions[p.id] = p.enabled; });
+        const d = this.wireData;
+        const live = await callApi('provisionWire', {
+            permissions,
+            limits: { perWire: Number(d.wireLimit) || null, daily: Number(d.wireDailyLimit) || null, dualControlAbove: Number(d.dualControlThreshold) || null },
+            approvalType: d.approvalType || 'threshold',
+            swiftBic: d.swiftBic, correspondentBank: d.correspondentBank
+        });
+        this.wireLive = live;
+        this.wireTicket = (live && live.data.ticket) || 'WIRE-' + Math.floor(10000 + Math.random() * 90000);
         this.wireSaved = true;
     }
 }

@@ -3,6 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { getBrand, BRANDS, CUSTOM_BRAND_ID, buildCustomBrand } from './brandConfig';
 import { brandStyle } from 'c/bankingTheme';
+import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
 const CREDIT_SCORE_FIELD = 'Contact.Credit_Score__c';
 const FIRST_NAME_FIELD = 'Contact.FirstName';
@@ -112,7 +113,22 @@ export default class BankingHub extends NavigationMixin(LightningElement) {
     connectedCallback() {
         this.applyBrand(this.defaultBrand || 'truist');
         window.addEventListener('keydown', this._onKeydown);
+        this.loadCreditProfile();
     }
+
+    // Credit bureau soft pull. Falls back to the Contact field, then the configured default.
+    @track liveCreditScore = null;
+    @track creditLive;
+
+    async loadCreditProfile() {
+        const live = await callApi('creditProfile');
+        this.creditLive = live;
+        const score = live && Number(live.data.score);
+        this.liveCreditScore = Number.isFinite(score) && score > 0 ? score : null;
+    }
+
+    get creditLiveLabel() { return liveLabel(this.creditLive); }
+    get creditLiveClass() { return liveClass(this.creditLive); }
 
     disconnectedCallback() {
         window.removeEventListener('keydown', this._onKeydown);
@@ -290,7 +306,7 @@ export default class BankingHub extends NavigationMixin(LightningElement) {
 
     // ── Credit score ──
     get creditScore() {
-        return this.contactCreditScore || Number(this.fallbackCreditScore) || 720;
+        return this.liveCreditScore || this.contactCreditScore || Number(this.fallbackCreditScore) || 720;
     }
 
     get tier() {

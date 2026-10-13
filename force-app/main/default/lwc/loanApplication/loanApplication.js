@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import { brandStyle } from 'c/bankingTheme';
+import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
 // Illustrative demo rates; production pulls pricing from the loan origination system.
 const RATES = { auto: 5.49, home: 6.75, personal: 8.99 };
@@ -22,6 +23,7 @@ export default class LoanApplication extends LightningElement {
     @track currentStep = 1;
     @track loanApproved = false;
     @track loanRef = '';
+    @track loanLive;
     @track loanData = {
         vehicleYear: '2025', vehicleMake: '', vehicleModel: '',
         vehicleCondition: 'new', vehiclePrice: '35000', downPayment: '',
@@ -117,8 +119,22 @@ export default class LoanApplication extends LightningElement {
     get showContinue() { return this.currentStep < 3; }
     get showSubmit() { return this.currentStep === 3 && !this.loanApproved; }
 
-    submitLoan() {
-        this.loanRef = 'LN-' + Math.floor(100000 + Math.random() * 900000);
+    // Decision engine call. Identity fields (SSN, DOB) never leave the page in the demo.
+    async submitLoan() {
+        const d = this.loanData;
+        const live = await callApi('prequalify', {
+            loanType: this.loanType,
+            vehicle: this.loanType === 'auto' ? { year: d.vehicleYear, make: d.vehicleMake, model: d.vehicleModel, condition: d.vehicleCondition, price: Number(d.vehiclePrice) } : undefined,
+            property: this.loanType === 'home' ? { address: d.propertyAddress, type: d.propertyType, value: Number(d.propertyValue) } : undefined,
+            amount: this.financed,
+            termMonths: this.termMonths,
+            employment: { status: d.employmentStatus, annualIncome: Number(d.annualIncome) || null }
+        });
+        this.loanLive = live;
+        this.loanRef = (live && live.data.reference) || 'LN-' + Math.floor(100000 + Math.random() * 900000);
         this.loanApproved = true;
     }
+
+    get loanLiveLabel() { return liveLabel(this.loanLive); }
+    get loanLiveClass() { return liveClass(this.loanLive); }
 }

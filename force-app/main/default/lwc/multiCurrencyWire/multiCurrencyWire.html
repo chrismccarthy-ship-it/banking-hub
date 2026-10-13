@@ -96,7 +96,8 @@
                 </template>
                 <template lwc:if={wireSubmitted}>
                     <div class="notice notice--success result" role="status">
-                        <strong>Wire submitted.</strong> Reference <strong class="num">{wireConfirmRef}</strong>. Sending {sendAmountText} as {convertedAmount} to {beneficiaryName}. Arrives: {settlementTime}.
+                        <strong>Wire submitted.</strong> Reference <strong class="num">{wireConfirmRef}</strong>. Sending {sendAmountText} as {convertedAmount} to {beneficiaryName}. Arrives: {settlementTime}. 
+                        <span class={wireLiveClass}>{wireLiveLabel}</span>
                     </div>
                 </template>
 
@@ -109,7 +110,7 @@
 
             <aside class="card rates">
                 <div class="rates-head">
-                    <h3 class="section-heading">Rates vs USD</h3>
+                    <h3 class="section-heading">Rates vs USD <span class={ratesLiveClass}>{ratesLiveLabel}</span></h3>
                     <button class="btn btn-ghost refresh" onclick={refreshRates}>Refresh</button>
                 </div>
                 <div class="table-wrap">

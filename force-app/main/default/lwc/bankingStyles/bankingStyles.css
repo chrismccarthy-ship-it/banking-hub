@@ -153,3 +153,7 @@
     .grid { grid-template-columns: 1fr; }
     .steps small { display: none; }
 }
+
+/* Live-integration status chip. Rendered only once a bank API call has resolved. */
+.live { margin-left: 8px; vertical-align: middle; font-weight: 500; }
+.live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; background: currentColor; opacity: .85; }

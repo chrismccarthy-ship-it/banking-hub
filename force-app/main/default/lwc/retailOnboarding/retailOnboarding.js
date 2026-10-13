@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import { brandStyle } from 'c/bankingTheme';
+import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
 const STEPS = [
     { id: 1, name: 'Welcome', hint: "What you'll need" },
@@ -24,6 +25,7 @@ export default class RetailOnboarding extends LightningElement {
     @track selectedAccount = 'premierPlus';
     @track submitSuccess = false;
     @track accountNumber = '';
+    @track accountLive;
     @track depositTouched = false;
 
     @track formData = {
@@ -121,8 +123,23 @@ export default class RetailOnboarding extends LightningElement {
         if (this.currentStep > 1) this.currentStep--;
     }
 
-    handleSubmit() {
-        this.accountNumber = '****' + Math.floor(1000 + Math.random() * 9000);
+    // Core account-open call. Identity fields (SSN, DOB) never leave the page in the demo.
+    async handleSubmit() {
+        const f = this.formData;
+        const live = await callApi('openAccount', {
+            applicant: { firstName: f.firstName, lastName: f.lastName, email: f.email, phone: f.phone },
+            product: this.selectedAccount,
+            address: { line1: f.street, city: f.city, state: f.state, postalCode: f.zip },
+            openingDeposit: { amount: Number(f.initialDeposit) || 0, currency: 'USD', source: 'external_transfer' },
+            paperlessStatements: true,
+            debitCard: true
+        });
+        this.accountLive = live;
+        const masked = live && live.data.account && live.data.account.maskedNumber;
+        this.accountNumber = masked || '****' + Math.floor(1000 + Math.random() * 9000);
         this.submitSuccess = true;
     }
+
+    get accountLiveLabel() { return liveLabel(this.accountLive); }
+    get accountLiveClass() { return liveClass(this.accountLive); }
 }

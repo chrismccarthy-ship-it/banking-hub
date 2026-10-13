@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import { brandStyle } from 'c/bankingTheme';
+import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
 const STEPS = ['Business details', 'Beneficial owners', 'Services', 'Documents', 'Submitted'];
 
@@ -35,6 +36,7 @@ export default class CommercialOnboarding extends LightningElement {
     @api brand = {};
     @track currentStep = 1;
     @track applicationRef = '';
+    @track applicationLive;
     @track formData = { legalName: '', dba: '', businessType: 'llc', industry: '', ein: '', yearEstablished: '', annualRevenue: '1m_10m', employees: '' };
     @track owners = [{ id: 1, num: 1, name: '', title: '', ownership: '', ssn: '' }];
     @track selected = ['checking'];
@@ -142,8 +144,19 @@ export default class CommercialOnboarding extends LightningElement {
     nextStep() { if (this.currentStep < 4) this.currentStep++; }
     prevStep() { if (this.currentStep > 1) this.currentStep--; }
 
-    submitApplication() {
-        this.applicationRef = 'COM-' + Math.floor(100000 + Math.random() * 900000);
+    // Commercial onboarding case. Owner SSNs never leave the page in the demo.
+    async submitApplication() {
+        const f = this.formData;
+        const live = await callApi('submitBusiness', {
+            business: { legalName: f.legalName, dba: f.dba, entityType: f.businessType, industry: f.industry, ein: f.ein, yearEstablished: f.yearEstablished, annualRevenue: f.annualRevenue, employees: f.employees },
+            beneficialOwners: this.owners.map(o => ({ name: o.name, title: o.title, ownershipPct: Number(o.ownership) || null })),
+            services: [...this.selected]
+        });
+        this.applicationLive = live;
+        this.applicationRef = (live && live.data.reference) || 'COM-' + Math.floor(100000 + Math.random() * 900000);
         this.currentStep = 5;
     }
+
+    get applicationLiveLabel() { return liveLabel(this.applicationLive); }
+    get applicationLiveClass() { return liveClass(this.applicationLive); }
 }
