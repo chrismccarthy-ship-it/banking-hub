@@ -22,7 +22,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Deploy failed' }
 
 Write-Host 'Assigning the Banking Hub Integration permission set to the running user' -ForegroundColor Cyan
 sf org assign permset --name Banking_Hub_Integration --target-org $Org
-# The guest user cannot be assigned from the CLI; see docs/experience-site-setup.md step 6.
+# Assign it to the demo customer user too; see docs/experience-site-setup.md step 5.
 
 $siteInRepo = Test-Path (Join-Path 'force-app' 'main' 'default' 'digitalExperiences' 'site')
 if (-not $SkipPublish -and $siteInRepo) {

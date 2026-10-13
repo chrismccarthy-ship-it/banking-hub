@@ -55,28 +55,27 @@ In Setup, once per org:
 Back in Builder:
 
 5. **Settings → Advanced** (or the theme's footer region): drag the **Embedded Messaging** component into the footer so it appears on every page. Pick the `BWAM Suite` deployment.
-6. Guest visitors see the chat button unless the channel has **user verification** on. For a public demo, leave verification off.
+6. Signed-in members see the chat button; user verification on the channel is optional for a logged-in site.
 
 Known issue to check before a demo: on custom domains the chat window sometimes opens blank until the Trusted URL entry is saved with *Connect source* checked.
 
-## 5. Guest access to the APIs
+## 5. Members: the demo customer and API access
 
-Guest users must be able to run `BankingIntegrationService`, or every number falls back to **Demo data**.
+The site is **login only** (Builder → Settings → General → *Public can access the site* stays off). Demo visitors sign in as a customer, so the hub greets them by their Contact name and reads `Credit_Score__c` from it.
 
-Builder → **Settings → General** → click the **Guest User Profile** link, then on the profile:
+1. **Account and Contact.** Create an Account (for example `Raman Household`) and a Contact `Priya Raman` with `Credit_Score__c = 742`, an email you control, and the Account as parent. For the commercial flows, a second Contact under `Harbor Point Logistics LLC` works the same way.
+2. **Enable as a customer user.** On the Contact, **Enable Customer User** (or *Manage External User*). Pick a **Customer Community** or **Customer Community Plus** license and a profile cloned from the matching standard profile, named for example `Banking Hub Customer`. Set a username and password you'll remember on stage.
+3. **Add the profile to the site.** Setup → Digital Experiences → All Sites → **Workspaces** → **Administration** → **Members** → add the `Banking Hub Customer` profile.
+4. **API access.** Assign the **Banking Hub Integration** permission set to the customer user (Setup → Users → user → Permission Set Assignments), or add `BankingIntegrationService` to the profile's **Enabled Apex Class Access** so every member gets it. Without this every number shows **Demo data**.
+5. **Login page.** The default login page works; set the logo and colours under Builder → Settings → Login & Registration if you want it branded. Keep self-registration off.
 
-- **Enabled Apex Class Access** → add `BankingIntegrationService`, **or**
-- **Permission Set Assignments** → add **Banking Hub Integration** (same effect, kept in sync by the repo).
-
-Leave **Allow guest users to access public APIs** off; it doesn't gate Apex on LWR and isn't needed.
-
-If the hub is behind login instead, assign the permission set to the member profile or user. `deploy.ps1` already assigns it to the user running the script.
+`deploy.ps1` assigns the permission set to the admin running it, which is what you need when previewing in Builder.
 
 ## 6. Publish and verify
 
 1. Builder → **Publish**. Each later `deploy.ps1` run republishes automatically.
-2. Open `https://<org>.my.site.com/bwam` in a private window. If you see a login page, the site isn't public: either turn on **Settings → General → Public can access the site** (then guest access in step 5 matters), or demo logged in as a site member and assign the permission set to that member instead.
-3. Under the FICO score, the chip should read **Live via API · n ms**. **Demo data** means step 5 or the org can't reach `*.mock.pstmn.io` (Setup → Remote Site Settings isn't needed with a Named Credential, so check the guest profile first).
+2. Open `https://<org>.my.site.com/bwam` in a private window and sign in as the customer user from step 5. The greeting should use the Contact's first name.
+3. Under the FICO score, the chip should read **Live via API · n ms**. **Demo data** means the permission set isn't on that user (step 5.4) or the org can't reach `*.mock.pstmn.io`.
 4. Open Help, search for an article; open the chat button and confirm the agent answers.
 
 ## 7. Put the site in the repo
@@ -98,7 +97,7 @@ sf org login web --alias newOrg
 .\scripts\deploy.ps1 -Org newOrg
 ```
 
-Then repeat steps 4 (messaging, if wanted) and 5 (guest profile) in that org, because profile edits and messaging deployments don't travel with the site metadata.
+Then repeat steps 4 (messaging, if wanted) and 5 (customer user and permission set) in that org, because users, profile edits and messaging deployments don't travel with the site metadata.
 
 ## Gotchas specific to LWR
 

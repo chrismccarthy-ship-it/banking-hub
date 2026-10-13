@@ -1,12 +1,14 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import USER_ID from '@salesforce/user/Id';
 import { getBrand, BRANDS, CUSTOM_BRAND_ID, buildCustomBrand } from './brandConfig';
 import { brandStyle } from 'c/bankingTheme';
 import { callApi, liveLabel, liveClass } from 'c/bankingApi';
 
 const CREDIT_SCORE_FIELD = 'Contact.Credit_Score__c';
 const FIRST_NAME_FIELD = 'Contact.FirstName';
+const USER_CONTACT_FIELD = 'User.ContactId';
 const LAST_NAME_FIELD = 'Contact.LastName';
 
 // Retail tasks. Visibility is controlled by the show* @api properties.
@@ -100,7 +102,17 @@ export default class BankingHub extends NavigationMixin(LightningElement) {
 
     _onKeydown = this.handleShortcut.bind(this);
 
-    @wire(getRecord, { recordId: '$recordId', optionalFields: [CREDIT_SCORE_FIELD, FIRST_NAME_FIELD, LAST_NAME_FIELD] })
+    // On an Experience Cloud site there is no record page: use the signed-in member's Contact.
+    @track userContactId = null;
+
+    @wire(getRecord, { recordId: USER_ID, fields: [USER_CONTACT_FIELD] })
+    wiredUser({ data }) {
+        if (data) this.userContactId = getFieldValue(data, USER_CONTACT_FIELD) || null;
+    }
+
+    get contactRecordId() { return this.recordId || this.userContactId; }
+
+    @wire(getRecord, { recordId: '$contactRecordId', optionalFields: [CREDIT_SCORE_FIELD, FIRST_NAME_FIELD, LAST_NAME_FIELD] })
     wiredContact({ data }) {
         if (data) {
             const score = getFieldValue(data, CREDIT_SCORE_FIELD);
