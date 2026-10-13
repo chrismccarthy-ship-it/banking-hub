@@ -59,23 +59,25 @@ Back in Builder:
 
 Known issue to check before a demo: on custom domains the chat window sometimes opens blank until the Trusted URL entry is saved with *Connect source* checked.
 
-## 5. Members: the demo customer and API access
+## 5. Members and API access
 
-The site is **login only** (Builder → Settings → General → *Public can access the site* stays off). Demo visitors sign in as a customer, so the hub greets them by their Contact name and reads `Credit_Score__c` from it.
+The site is **login only** (Builder → Settings → General → *Public can access the site* stays off). You don't need to create a new user. Any existing site member works: the hub greets whoever signs in by their Contact's first name and reads `Credit_Score__c` from that Contact. If the Contact has no score, the hub uses the **Default Credit Score** property; if the user has no Contact (an internal user previewing in Builder), it uses **Greeting Name**.
 
-1. **Account and Contact.** Create an Account (for example `Raman Household`) and a Contact `Priya Raman` with `Credit_Score__c = 742`, an email you control, and the Account as parent. For the commercial flows, a second Contact under `Harbor Point Logistics LLC` works the same way.
-2. **Enable as a customer user.** On the Contact, **Enable Customer User** (or *Manage External User*). Pick a **Customer Community** or **Customer Community Plus** license and a profile cloned from the matching standard profile, named for example `Banking Hub Customer`. Set a username and password you'll remember on stage.
-3. **Add the profile to the site.** Setup → Digital Experiences → All Sites → **Workspaces** → **Administration** → **Members** → add the `Banking Hub Customer` profile.
-4. **API access.** Assign the **Banking Hub Integration** permission set to the customer user (Setup → Users → user → Permission Set Assignments), or add `BankingIntegrationService` to the profile's **Enabled Apex Class Access** so every member gets it. Without this every number shows **Demo data**.
-5. **Login page.** The default login page works; set the logo and colours under Builder → Settings → Login & Registration if you want it branded. Keep self-registration off.
+What the demo user needs:
+
+1. **Site access.** The user's profile must be a site member: Setup → Digital Experiences → All Sites → **Workspaces** → **Administration** → **Members**. Any customer-type profile already in the org (the SDO ships with several) is fine.
+2. **API access.** Assign the **Banking Hub Integration** permission set to that user (Setup → Users → user → Permission Set Assignments), or add `BankingIntegrationService` to the profile's **Enabled Apex Class Access** so every member gets it. Without this every number shows **Demo data**.
+3. **Optional, to match the mock:** set the user's Contact `Credit_Score__c` to 742 so the score on screen matches the bureau response in Postman. The mock's JSON still says "Priya Raman"; the hub never displays that name, so the greeting follows the real Contact.
+
+Only if you want a dedicated persona: create a Contact, **Enable Customer User**, pick a Customer Community license and a member profile, then do steps 1 and 2 for it. Keep self-registration off.
 
 `deploy.ps1` assigns the permission set to the admin running it, which is what you need when previewing in Builder.
 
 ## 6. Publish and verify
 
 1. Builder → **Publish**. Each later `deploy.ps1` run republishes automatically.
-2. Open `https://<org>.my.site.com/bwam` in a private window and sign in as the customer user from step 5. The greeting should use the Contact's first name.
-3. Under the FICO score, the chip should read **Live via API · n ms**. **Demo data** means the permission set isn't on that user (step 5.4) or the org can't reach `*.mock.pstmn.io`.
+2. Open `https://<org>.my.site.com/bwam` in a private window and sign in as a site member. The greeting should use that Contact's first name.
+3. Under the FICO score, the chip should read **Live via API · n ms**. **Demo data** means the permission set isn't on that user (step 5.2) or the org can't reach `*.mock.pstmn.io`.
 4. Open Help, search for an article; open the chat button and confirm the agent answers.
 
 ## 7. Put the site in the repo
@@ -97,7 +99,7 @@ sf org login web --alias newOrg
 .\scripts\deploy.ps1 -Org newOrg
 ```
 
-Then repeat steps 4 (messaging, if wanted) and 5 (customer user and permission set) in that org, because users, profile edits and messaging deployments don't travel with the site metadata.
+Then repeat steps 4 (messaging, if wanted) and 5 (site membership and permission set) in that org, because users, profile edits and messaging deployments don't travel with the site metadata.
 
 ## Gotchas specific to LWR
 
