@@ -1,7 +1,8 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
-import { getBrand, BRANDS, CUSTOM_BRAND_ID, buildCustomBrand, rgba } from './brandConfig';
+import { getBrand, BRANDS, CUSTOM_BRAND_ID, buildCustomBrand } from './brandConfig';
+import { brandStyle } from 'c/bankingTheme';
 
 const CREDIT_SCORE_FIELD = 'Contact.Credit_Score__c';
 const FIRST_NAME_FIELD = 'Contact.FirstName';
@@ -126,19 +127,7 @@ export default class BankingHub extends NavigationMixin(LightningElement) {
     }
 
     get brandVars() {
-        const b = this.brand;
-        return [
-            `--bh-primary:${b.primaryColor}`,
-            `--bh-primary-dark:${b.primaryDark || b.primaryColor}`,
-            `--bh-primary-light:${b.primaryLight}`,
-            `--bh-header-bg:${b.headerBg}`,
-            `--bh-header-text:${b.headerText}`,
-            `--bh-btn-radius:${b.buttonRadius || '6px'}`,
-            `--bh-font:${b.font}`,
-            `--bh-glow-strong:${rgba(b.primaryColor, 0.55)}`,
-            `--bh-glow-soft:${rgba(b.primaryColor, 0.4)}`,
-            `--bh-glow-selected:${rgba(b.primaryColor, 0.5)}`
-        ].join(';');
+        return brandStyle(this.brand);
     }
 
     get brandOptions() {
