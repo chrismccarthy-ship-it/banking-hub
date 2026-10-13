@@ -8,12 +8,12 @@
 #>
 param(
     [Parameter(Mandatory = $true)] [string] $Org,
-    [string] $SiteName = 'Banking Hub'
+    [string] $SiteName = 'BWAM Suite'
 )
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
-# Site API names drop spaces: "Banking Hub" -> "Banking_Hub".
+# Site API names drop spaces: "BWAM Suite" -> "BWAM_Suite".
 $apiName = $SiteName -replace ' ', '_'
 
 Write-Host "Retrieving site '$SiteName' ($apiName) from $Org" -ForegroundColor Cyan

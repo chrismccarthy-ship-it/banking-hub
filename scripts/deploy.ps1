@@ -9,7 +9,7 @@
 #>
 param(
     [Parameter(Mandatory = $true)] [string] $Org,
-    [string] $SiteName = 'Banking Hub',
+    [string] $SiteName = 'BWAM Suite',
     [switch] $SkipPublish
 )
 $ErrorActionPreference = 'Stop'

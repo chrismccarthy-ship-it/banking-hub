@@ -17,10 +17,10 @@ Setup → Digital Experiences → All Sites → **New** → **Build Your Own (LW
 
 | Field | Value |
 |---|---|
-| Name | `Banking Hub` |
-| URL suffix | `bankinghub` |
+| Name | `BWAM Suite` |
+| URL suffix | `bwam` |
 
-Keep the name exact; the scripts and the Network metadata use it.
+Keep the name exact; the scripts default to it. The SDO site is `https://storm-6269dbe2d00053.my.site.com/bwam`.
 
 ## 2. Home page: the hub
 
@@ -48,13 +48,13 @@ Knowledge Article List is Beta on LWR and is category-driven; there is no Topics
 In Setup, once per org:
 
 1. **Messaging Settings** → New Channel → **Messaging for In-App and Web** → name `Banking Hub Web`. Activate it.
-2. **Embedded Service Deployments** → New → **Messaging for In-App and Web** → **Experience Cloud site** → name `Banking Hub`, choose the `Banking Hub` site and the `Banking Hub Web` channel. Publish the deployment.
+2. **Embedded Service Deployments** → New → **Messaging for In-App and Web** → **Experience Cloud site** → name `BWAM Suite`, choose the `BWAM Suite` site and the `Banking Hub Web` channel. Publish the deployment.
 3. **Omni-Channel Flows**: the channel's routing flow must **Route Work → to Agentforce Service Agent** (the standard template does this; pick your agent). Activate the agent.
 4. **CORS** and **Trusted URLs**: add the site's URL (`https://<org>.my.site.com`) to both. Chat silently fails to load without this.
 
 Back in Builder:
 
-5. **Settings → Advanced** (or the theme's footer region): drag the **Embedded Messaging** component into the footer so it appears on every page. Pick the `Banking Hub` deployment.
+5. **Settings → Advanced** (or the theme's footer region): drag the **Embedded Messaging** component into the footer so it appears on every page. Pick the `BWAM Suite` deployment.
 6. Guest visitors see the chat button unless the channel has **user verification** on. For a public demo, leave verification off.
 
 Known issue to check before a demo: on custom domains the chat window sometimes opens blank until the Trusted URL entry is saved with *Connect source* checked.
@@ -75,7 +75,7 @@ If the hub is behind login instead, assign the permission set to the member prof
 ## 6. Publish and verify
 
 1. Builder → **Publish**. Each later `deploy.ps1` run republishes automatically.
-2. Open `https://<org>.my.site.com/bankinghub` in a private window (guest view).
+2. Open `https://<org>.my.site.com/bwam` in a private window. If you see a login page, the site isn't public: either turn on **Settings → General → Public can access the site** (then guest access in step 5 matters), or demo logged in as a site member and assign the permission set to that member instead.
 3. Under the FICO score, the chip should read **Live via API · n ms**. **Demo data** means step 5 or the org can't reach `*.mock.pstmn.io` (Setup → Remote Site Settings isn't needed with a Named Credential, so check the guest profile first).
 4. Open Help, search for an article; open the chat button and confirm the agent answers.
 
@@ -87,7 +87,7 @@ git add force-app
 git commit -m "Add the Banking Hub LWR site"
 ```
 
-This pulls `DigitalExperienceBundle`, `DigitalExperienceConfig`, `Network` and `CustomSite`. Before committing, open `force-app/main/default/networks/Banking Hub.network-meta.xml` and check `emailSenderAddress` is an address that exists in every target org, since a bad value fails the deploy.
+This pulls `DigitalExperienceBundle`, `DigitalExperienceConfig`, `Network` and `CustomSite`. Before committing, open `force-app/main/default/networks/BWAM Suite.network-meta.xml` and check `emailSenderAddress` is an address that exists in every target org, since a bad value fails the deploy.
 
 Messaging metadata is optional to retrieve (`EmbeddedServiceConfig`, `MessagingChannel`); the agent itself and the Omni-Channel flow are org-specific and are set up by hand per org.
 
@@ -102,7 +102,7 @@ Then repeat steps 4 (messaging, if wanted) and 5 (guest profile) in that org, be
 
 ## Gotchas specific to LWR
 
-- Every LWC, custom label, message channel or Apex signature change needs a publish. `deploy.ps1` does it; if you deploy by hand, run `sf community publish --name "Banking Hub"`.
+- Every LWC, custom label, message channel or Apex signature change needs a publish. `deploy.ps1` does it; if you deploy by hand, run `sf community publish --name "BWAM Suite"`.
 - Lightning Web Security blocks `window.location`, `document.location` and `window.top`. The hub uses `lightning/navigation` only.
 - `ShowToastEvent` doesn't fire on LWR; the hub uses inline notices instead.
 - Flows with Aura screen components or local actions (Navigate Everywhere, Open URL) break on LWR. The hub has no Flows today.
