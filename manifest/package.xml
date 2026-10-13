@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Everything the Banking Hub needs in a new org. Site types are present once
+     scripts/retrieve-site.ps1 has pulled the site into force-app. -->
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types><members>*</members><name>LightningComponentBundle</name></types>
+    <types><members>*</members><name>ApexClass</name></types>
+    <types><members>*</members><name>NamedCredential</name></types>
+    <types><members>*</members><name>PermissionSet</name></types>
+    <types><members>*</members><name>DigitalExperienceBundle</name></types>
+    <types><members>*</members><name>DigitalExperienceConfig</name></types>
+    <types><members>*</members><name>Network</name></types>
+    <types><members>*</members><name>CustomSite</name></types>
+    <version>63.0</version>
+</Package>
