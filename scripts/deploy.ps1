@@ -15,6 +15,17 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
+# The Network metadata carries an emailSenderAddress that must exist in the target org.
+# Use the deploying user's address so the same file deploys anywhere.
+$networkFile = Join-Path 'force-app' 'main' 'default' 'networks' "$SiteName.network-meta.xml"
+if (Test-Path $networkFile) {
+    $me = (sf org display user --target-org $Org --json | ConvertFrom-Json).result.username
+    $xml = [System.IO.File]::ReadAllText($networkFile)
+    $xml = [regex]::Replace($xml, '<emailSenderAddress>.*?</emailSenderAddress>', "<emailSenderAddress>$me</emailSenderAddress>")
+    [System.IO.File]::WriteAllText($networkFile, $xml, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host "Network emailSenderAddress set to $me (not committed; git checkout to revert)" -ForegroundColor DarkGray
+}
+
 Write-Host "Deploying force-app to $Org" -ForegroundColor Cyan
 sf project deploy start --source-dir force-app --target-org $Org `
     --test-level RunSpecifiedTests --tests BankingIntegrationServiceTest

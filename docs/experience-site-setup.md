@@ -86,7 +86,7 @@ git add force-app
 git commit -m "Add the Banking Hub LWR site"
 ```
 
-This pulls `DigitalExperienceBundle`, `DigitalExperienceConfig`, `Network` and `CustomSite`. Before committing, open `force-app/main/default/networks/BWAM Suite.network-meta.xml` and check `emailSenderAddress` is an address that exists in every target org, since a bad value fails the deploy.
+This pulls `DigitalExperienceBundle`, `DigitalExperienceConfig`, `Network` and `CustomSite`. The bundle's developer name is usually suffixed (`BWAM_Suite1`); if the retrieve warns it cannot be found, run `sf org list metadata --metadata-type DigitalExperienceBundle --target-org <alias>` and pass the name with `-BundleName`. The Network file's `emailSenderAddress` is org-specific; `deploy.ps1` rewrites it to the deploying user before each deploy, so you don't need to edit it.
 
 Messaging metadata is optional to retrieve (`EmbeddedServiceConfig`, `MessagingChannel`); the agent itself and the Omni-Channel flow are org-specific and are set up by hand per org.
 

@@ -8,7 +8,10 @@
 #>
 param(
     [Parameter(Mandatory = $true)] [string] $Org,
-    [string] $SiteName = 'BWAM Suite'
+    [string] $SiteName = 'BWAM Suite',
+    # Developer name of the site's DigitalExperienceBundle. Salesforce often suffixes it
+    # (BWAM_Suite1); `sf org list metadata --metadata-type DigitalExperienceBundle` shows it.
+    [string] $BundleName = 'BWAM_Suite1'
 )
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
@@ -18,8 +21,8 @@ $apiName = $SiteName -replace ' ', '_'
 
 Write-Host "Retrieving site '$SiteName' ($apiName) from $Org" -ForegroundColor Cyan
 sf project retrieve start --target-org $Org `
-    --metadata "DigitalExperienceBundle:site/$apiName" `
-    --metadata "DigitalExperienceConfig:$apiName" `
+    --metadata "DigitalExperienceBundle:site/$BundleName" `
+    --metadata "DigitalExperienceConfig:$BundleName" `
     --metadata "Network:$SiteName" `
     --metadata "CustomSite:$apiName"
 if ($LASTEXITCODE -ne 0) { throw 'Retrieve failed' }
